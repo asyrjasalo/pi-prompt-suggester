@@ -7,6 +7,7 @@
 ### Fixed
 - Fixed `/suggesterSettings` writing to a non-loaded path (`~/.pi/suggester/config.json`) — project and user override paths now match what the config loader actually reads.
 - Changed `/suggesterSettings` default scope from project to user (global), so settings are saved to `~/.pi/agent/extensions/pi-prompt-suggester/config.json` by default.
+- Fixed crash when pressing `@` after accepting a ghost suggestion — updated `@mariozechner/pi-tui` to 0.70.2 which passes required `options.signal` to `getSuggestions`, and updated session event names to match the new API (`session_before_fork`, `session_before_switch`).
 
 ## 0.3.8 - 2026-04-20
 

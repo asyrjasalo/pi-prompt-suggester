@@ -4,9 +4,9 @@ import type {
 	ExtensionCommandContext,
 	ExtensionContext,
 	InputEvent,
-	SessionForkEvent,
+	SessionBeforeForkEvent,
+	SessionBeforeSwitchEvent,
 	SessionStartEvent,
-	SessionSwitchEvent,
 	SessionTreeEvent,
 } from "@mariozechner/pi-coding-agent";
 import type { TurnContext } from "../../domain/suggestion.js";
@@ -87,10 +87,10 @@ export class PiExtensionAdapter {
 		this.pi.on("session_tree", async (_event: SessionTreeEvent, ctx) => {
 			await handleSessionEvent(ctx, this.wiring.onSessionStart);
 		});
-		this.pi.on("session_fork", async (_event: SessionForkEvent, ctx) => {
+		this.pi.on("session_before_fork", async (_event: SessionBeforeForkEvent, ctx) => {
 			await handleSessionEvent(ctx, this.wiring.onSessionStart);
 		});
-		this.pi.on("session_switch", async (_event: SessionSwitchEvent, ctx) => {
+		this.pi.on("session_before_switch", async (_event: SessionBeforeSwitchEvent, ctx) => {
 			await handleSessionEvent(ctx, this.wiring.onSessionStart);
 		});
 
