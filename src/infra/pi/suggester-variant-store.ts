@@ -1,4 +1,5 @@
 import { promises as fs } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import type { InferenceDefault, PromptSuggesterConfig, SuggestionStrategy, ThinkingLevel } from "../../config/types.js";
 import { readJsonIfExists, writeJson } from "../storage/json-file.js";
@@ -152,8 +153,9 @@ export class SuggesterVariantStore {
 	private state: VariantFile = DEFAULT_FILE;
 
 	public constructor(private readonly cwd: string = process.cwd()) {
-		this.filePath = path.join(this.cwd, ".pi", "suggester", "variants.json");
-		this.resultsPath = path.join(this.cwd, ".pi", "suggester", "ab-results.ndjson");
+		const dataDir = os.homedir();
+		this.filePath = path.join(dataDir, ".pi", "suggester", "variants.json");
+		this.resultsPath = path.join(dataDir, ".pi", "suggester", "ab-results.ndjson");
 	}
 
 	public async init(): Promise<void> {

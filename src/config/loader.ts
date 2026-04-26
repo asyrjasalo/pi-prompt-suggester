@@ -89,19 +89,15 @@ export class FileConfigLoader implements ConfigLoader {
 		const cwdDefaultPath = path.join(this.cwd, "config", "prompt-suggester.config.json");
 		const defaultPath = (await pathExists(cwdDefaultPath)) ? cwdDefaultPath : PACKAGE_DEFAULT_CONFIG_PATH;
 		const userPath = path.join(this.homeDir, ".pi", "suggester", "config.json");
-		const projectPath = path.join(this.cwd, ".pi", "suggester", "config.json");
 
 		const defaultConfig = await readRequiredConfig(defaultPath);
-		const [userConfig, projectConfig] = await Promise.all([
-			readOverrideConfig(userPath, defaultConfig),
-			readOverrideConfig(projectPath, defaultConfig),
-		]);
-		const merged = deepMerge(deepMerge(defaultConfig, userConfig), projectConfig);
+		const userConfig = await readOverrideConfig(userPath, defaultConfig);
+		const merged = deepMerge(defaultConfig, userConfig);
 		const normalized = normalizeConfig(merged, defaultConfig);
 
 		if (!validateConfig(normalized.config)) {
 			throw new Error(
-				`Failed to normalize suggester config. Base defaults from ${defaultPath}; overrides from ${userPath} and ${projectPath}.`,
+				`Failed to normalize suggester config. Base defaults from ${defaultPath}; overrides from ${userPath}.`,
 			);
 		}
 		return normalized.config;

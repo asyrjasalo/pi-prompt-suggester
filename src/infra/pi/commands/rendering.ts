@@ -35,7 +35,7 @@ export function renderSeedTrace(events: LoggedEvent[]): string {
 		"Suggester seed trace",
 		`- events shown: ${lines.length}`,
 		latestRunId ? `- latest run: ${latestRunId}` : "- latest run: (unknown)",
-		"- log file: .pi/suggester/logs/events.ndjson",
+		"- log file: ~/.pi/suggester/logs/events.ndjson",
 		...lines,
 	].join("\n");
 }
@@ -76,7 +76,7 @@ export function renderStatus(
 		`- models (config): seeder=${config.inference.seederModel}, suggester=${config.inference.suggesterModel}`,
 		`- thinking (config): seeder=${config.inference.seederThinking}, suggester=${config.inference.suggesterThinking}`,
 		`- ${compactUsageLine}`,
-		`- logs: .pi/suggester/logs/events.ndjson (use /suggester seed-trace)`,
+		`- logs: ~/.pi/suggester/logs/events.ndjson (use /suggester seed-trace)`,
 		`- last suggestion: ${state.lastSuggestion?.text ?? "(none)"}`,
 		`- steering history: exact=${steeringSummary.exact}, edited=${steeringSummary.edited}, changed=${steeringSummary.changed}`,
 	].join("\n");

@@ -1,3 +1,4 @@
+import os from "node:os";
 import path from "node:path";
 import { FileConfigLoader } from "../config/loader.js";
 import { Sha256FileHash } from "../infra/hashing/sha256-file-hash.js";
@@ -14,7 +15,7 @@ export async function runStaleCheckScript(): Promise<void> {
 		vcs: new GitClient(cwd),
 		cwd,
 	});
-	const seedStore = new JsonSeedStore(path.join(cwd, ".pi", "suggester", "seed.json"));
+	const seedStore = new JsonSeedStore(path.join(os.homedir(), ".pi", "suggester", "seed.json"));
 	const seed = await seedStore.load();
 	const result = await checker.check(seed);
 	process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);

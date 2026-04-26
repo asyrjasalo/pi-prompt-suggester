@@ -1,3 +1,4 @@
+import os from "node:os";
 import path from "node:path";
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import type { PromptSuggesterConfig } from "../config/types.js";
@@ -54,7 +55,8 @@ export async function createAppComposition(pi: ExtensionAPI, cwd: string = proce
 		variantStore,
 		getSessionThinkingLevel: () => pi.getThinkingLevel(),
 	});
-	const eventLog = new NdjsonEventLog(path.join(cwd, ".pi", "suggester", "logs", "events.ndjson"));
+	const dataDir = os.homedir();
+	const eventLog = new NdjsonEventLog(path.join(dataDir, ".pi", "suggester", "logs", "events.ndjson"));
 	const logger = new ConsoleLogger(config.logging.level, {
 		getContext: () => runtimeRef.getContext(),
 		statusKey: "suggester-events",
@@ -68,7 +70,7 @@ export async function createAppComposition(pi: ExtensionAPI, cwd: string = proce
 	const taskQueue = new InMemoryTaskQueue();
 	const vcs = new GitClient(cwd);
 	const fileHash = new Sha256FileHash();
-	const seedStore = new JsonSeedStore(path.join(cwd, ".pi", "suggester", "seed.json"));
+	const seedStore = new JsonSeedStore(path.join(dataDir, ".pi", "suggester", "seed.json"));
 	const stateStore = new SessionStateStore(cwd, () => runtimeRef.getContext()?.sessionManager);
 	const modelClient = new PiModelClient(runtimeRef, logger, cwd);
 	const clock = new SystemClock();

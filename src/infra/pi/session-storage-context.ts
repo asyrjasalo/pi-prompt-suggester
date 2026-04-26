@@ -1,3 +1,4 @@
+import os from "node:os";
 import path from "node:path";
 import type { SessionEntry } from "@mariozechner/pi-coding-agent";
 import { ROOT_STATE_KEY, type SessionReadableManager, type SessionStorageContext } from "./session-state-types.js";
@@ -30,7 +31,7 @@ export function createSessionStorageContext(
 		};
 	}
 
-	const storageDir = path.join(cwd, ".pi", "suggester", "sessions", sessionId);
+	const storageDir = path.join(os.homedir(), ".pi", "suggester", "sessions", sessionId);
 	return {
 		sessionId,
 		sessionFile,
