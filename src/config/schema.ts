@@ -55,7 +55,7 @@ function isSuggestionDisplayMode(value: unknown): boolean {
 }
 
 function isGhostAcceptKey(value: unknown): value is GhostAcceptKey {
-	return ["space", "right"].includes(String(value));
+	return ["space", "right", "tab"].includes(String(value));
 }
 
 function isGhostAcceptKeys(value: unknown): value is GhostAcceptKey[] {

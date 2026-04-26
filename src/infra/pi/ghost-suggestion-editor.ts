@@ -62,6 +62,12 @@ export class GhostSuggestionEditor extends CustomEditor {
 			return;
 		}
 
+		// Tab triggers pi-tui file autocomplete which crashes when no autocomplete
+		// provider is available. Swallow tab when configured as a ghost accept key.
+		if (data === "\t" && this.ghostAcceptKeys.includes("tab")) {
+			return;
+		}
+
 		super.handleInput(data);
 		this.updateGhostSuppressionLifecycle();
 		this.syncSharedHistoryState();

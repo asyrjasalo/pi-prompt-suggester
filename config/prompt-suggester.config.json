@@ -14,7 +14,7 @@
     "customInstruction": "",
     "fastPathContinueOnError": true,
     "displayMode": "ghost",
-    "ghostAcceptKeys": ["space"],
+    "ghostAcceptKeys": ["space", "tab"],
     "maxAssistantTurnChars": 100000,
     "maxRecentUserPrompts": 20,
     "maxRecentUserPromptChars": 500,
