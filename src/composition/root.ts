@@ -1,5 +1,6 @@
 import os from "node:os";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import type { PromptSuggesterConfig } from "../config/types.js";
 import { FileConfigLoader } from "../config/loader.js";
@@ -44,6 +45,13 @@ export interface AppComposition {
 	};
 }
 
+function createRepoSeedKey(cwd: string): string {
+	const normalized = path.resolve(cwd);
+	const baseName = path.basename(normalized).replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase() || "repo";
+	const hash = createHash("sha256").update(normalized).digest("hex").slice(0, 16);
+	return `${baseName}-${hash}`;
+}
+
 export async function createAppComposition(pi: ExtensionAPI, cwd: string = process.cwd()): Promise<AppComposition> {
 	const config = await new FileConfigLoader(cwd).load();
 	const runtimeRef = new RuntimeRef();
@@ -70,7 +78,11 @@ export async function createAppComposition(pi: ExtensionAPI, cwd: string = proce
 	const taskQueue = new InMemoryTaskQueue();
 	const vcs = new GitClient(cwd);
 	const fileHash = new Sha256FileHash();
-	const seedStore = new JsonSeedStore(path.join(dataDir, ".pi", "suggester", "seed.json"));
+	const seedKey = createRepoSeedKey(cwd);
+	const seedStore = new JsonSeedStore(
+		path.join(dataDir, ".pi", "suggester", "seeds", `${seedKey}.json`),
+		path.join(dataDir, ".pi", "suggester", "seed.json"),
+	);
 	const stateStore = new SessionStateStore(cwd, () => runtimeRef.getContext()?.sessionManager);
 	const modelClient = new PiModelClient(runtimeRef, logger, cwd);
 	const clock = new SystemClock();
