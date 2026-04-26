@@ -11,6 +11,15 @@ const LEVEL_ORDER: Record<Level, number> = {
 	error: 40,
 };
 
+function hasUi(context: ExtensionContext | undefined): boolean {
+	try {
+		return Boolean(context?.hasUI);
+	} catch (error) {
+		if (error instanceof Error && error.message.includes("extension ctx is stale")) return false;
+		throw error;
+	}
+}
+
 function truncate(value: string, maxChars: number): string {
 	if (value.length <= maxChars) return value;
 	return `${value.slice(0, maxChars)}…`;
@@ -69,7 +78,7 @@ export class ConsoleLogger implements Logger {
 		const statusLine = truncate(`[suggester ${level}] ${message}`, 120);
 		const ctx = this.options.getContext?.();
 		this.options.setWidgetLogStatus?.(level === "warn" || level === "error" ? { level, text: statusLine } : undefined);
-		if (ctx?.hasUI && !this.options.setWidgetLogStatus) {
+		if (ctx && hasUi(ctx) && !this.options.setWidgetLogStatus) {
 			const theme = ctx.ui.theme;
 			const colorized =
 				level === "error"

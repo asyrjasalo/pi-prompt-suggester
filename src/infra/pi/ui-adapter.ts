@@ -8,6 +8,21 @@ import type { UiContextLike } from "./ui-context.js";
 
 export const WIDGET_ACCEPT_SHORTCUT_LABEL = "F2 accepts";
 
+function isStaleContextError(error: unknown): boolean {
+	return error instanceof Error && error.message.includes("extension ctx is stale");
+}
+
+function getSafeUiContext(runtime: UiContextLike): ExtensionContext | undefined {
+	try {
+		const ctx = runtime.getContext();
+		if (!ctx?.hasUI) return undefined;
+		return ctx;
+	} catch (error) {
+		if (isStaleContextError(error)) return undefined;
+		throw error;
+	}
+}
+
 function formatUsage(
 	usage: { suggester: SuggestionUsageStats; seeder: SuggestionUsageStats },
 	suggesterModelDisplay: string | undefined,
@@ -32,8 +47,8 @@ function formatPanelLog(
 }
 
 export function refreshSuggesterUi(runtime: UiContextLike): void {
-	const ctx = runtime.getContext();
-	if (!ctx?.hasUI) return;
+	const ctx = getSafeUiContext(runtime);
+	if (!ctx) return;
 
 	ctx.ui.setStatus("suggester", undefined);
 	ctx.ui.setStatus("suggester-events", undefined);
@@ -95,8 +110,8 @@ function themeHintText(widgetMode: boolean): string | undefined {
 }
 
 export function acceptWidgetSuggestion(runtime: UiContextLike): "accepted" | "missing-suggestion" | "mismatch" | "unavailable" {
-	const ctx = runtime.getContext();
-	if (!ctx?.hasUI || !usesWidgetSuggestion(runtime.suggestionDisplayMode)) return "unavailable";
+	const ctx = getSafeUiContext(runtime);
+	if (!ctx || !usesWidgetSuggestion(runtime.suggestionDisplayMode)) return "unavailable";
 	const suggestion = runtime.getSuggestion();
 	if (!suggestion) return "missing-suggestion";
 	const editorText = ctx.ui.getEditorText();
@@ -113,8 +128,8 @@ export class PiSuggestionSink implements SuggestionSink {
 
 	public async showSuggestion(text: string, options?: { restore?: boolean; generationId?: number }): Promise<void> {
 		if (options?.generationId !== undefined && options.generationId !== this.runtime.getEpoch()) return;
-		const ctx = this.runtime.getContext();
-		if (!ctx?.hasUI) return;
+		const ctx = getSafeUiContext(this.runtime);
+		if (!ctx) return;
 
 		const editorText = ctx.ui.getEditorText();
 		const trimmedEditorText = editorText.trim();
@@ -144,8 +159,8 @@ export class PiSuggestionSink implements SuggestionSink {
 	}
 
 	public async setUsage(usage: { suggester: SuggestionUsageStats; seeder: SuggestionUsageStats }): Promise<void> {
-		const ctx = this.runtime.getContext();
-		if (!ctx?.hasUI) return;
+		const ctx = getSafeUiContext(this.runtime);
+		if (!ctx) return;
 		if (usage.suggester.calls <= 0 && usage.seeder.calls <= 0) {
 			this.runtime.setPanelUsageStatus(undefined);
 			refreshSuggesterUi(this.runtime);
