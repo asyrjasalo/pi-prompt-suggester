@@ -72,7 +72,7 @@ export function renderStatus(
 		`- custom instruction: ${summarizeInstruction(config.suggestion.customInstruction)}`,
 		`- suggestion strategy: ${config.suggestion.strategy}`,
 		`- steering transcript guardrails: ctx<=${config.suggestion.transcriptMaxContextPercent}% msgs<=${config.suggestion.transcriptMaxMessages} chars<=${config.suggestion.transcriptMaxChars} rollout=${config.suggestion.transcriptRolloutPercent}%`,
-		"- local experiment controls: /suggesterSettings → strategy / variants / transcript guardrails",
+		"- global settings: /suggesterSettings → strategy / variants / transcript guardrails",
 		`- models (config): seeder=${config.inference.seederModel}, suggester=${config.inference.suggesterModel}`,
 		`- thinking (config): seeder=${config.inference.seederThinking}, suggester=${config.inference.suggesterThinking}`,
 		`- ${compactUsageLine}`,

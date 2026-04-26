@@ -8,12 +8,12 @@ import { readObjectJsonIfExists, writeJson } from "../../storage/json-file.js";
 import type { ConfigScope } from "./shared.js";
 import { setPathValue } from "./shared.js";
 
-export function projectOverridePath(_cwd: string): string {
-	return path.join(os.homedir(), ".pi", "suggester", "config.json");
+export function projectOverridePath(cwd: string): string {
+	return path.join(cwd, "etc", "pi", "extensions", "pi-prompt-suggester", "config.json");
 }
 
 export function userOverridePath(homeDir: string = os.homedir()): string {
-	return path.join(homeDir, ".pi", "suggester", "config.json");
+	return path.join(homeDir, ".pi", "agent", "extensions", "pi-prompt-suggester", "config.json");
 }
 
 export class SuggesterConfigPersistence {

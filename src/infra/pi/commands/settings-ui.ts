@@ -19,7 +19,7 @@ export async function handleSettingsUiCommand(
 	}
 
 	const persistence = new SuggesterConfigPersistence(ctx, composition);
-	let activeScope: ConfigScope = "project";
+	let activeScope: ConfigScope = "user";
 	const thinkingOptions = [...THINKING_LEVELS, SESSION_DEFAULT];
 	const strategyOptions = ["compact", "transcript-steering"] as const;
 	const suggestionDisplayOptions = ["ghost", "widget"] as const;
@@ -444,14 +444,22 @@ export async function handleSettingsUiCommand(
 				);
 				const selected = await ctx.ui.select(
 					`Ghost accept keys (${formatScopeName(activeScope)}, current: ${formatGhostAcceptKeys(currentValue)})`,
-					["Space", "Right", "Space + Right"],
+					["Space", "Tab", "Right", "Space + Tab", "Space + Right", "Tab + Right", "Space + Tab + Right"],
 				);
 				if (!selected) continue;
 				const next = selected === "Space"
 					? ["space"]
-					: selected === "Right"
-						? ["right"]
-						: ["space", "right"];
+					: selected === "Tab"
+						? ["tab"]
+						: selected === "Right"
+							? ["right"]
+							: selected === "Space + Tab"
+								? ["space", "tab"]
+								: selected === "Space + Right"
+									? ["space", "right"]
+									: selected === "Tab + Right"
+										? ["tab", "right"]
+										: ["space", "tab", "right"];
 				await persistence.writeValue(activeScope, action, next);
 				ctx.ui.notify(`Updated ${action} in ${activeScope} override.`, "info");
 				continue;

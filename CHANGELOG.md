@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Fixed
+- Fixed `/suggesterSettings` writing to a non-loaded path (`~/.pi/suggester/config.json`) — project and user override paths now match what the config loader actually reads.
+- Changed `/suggesterSettings` default scope from project to user (global), so settings are saved to `~/.pi/agent/extensions/pi-prompt-suggester/config.json` by default.
+
 ## 0.3.8 - 2026-04-20
 
 ### Added
