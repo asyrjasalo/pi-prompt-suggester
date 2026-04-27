@@ -39,7 +39,7 @@ function isPositivePercentageInteger(value: unknown): boolean {
 }
 
 function isThinkingLevel(value: unknown): boolean {
-	return ["minimal", "low", "medium", "high", "xhigh", "session-default"].includes(String(value));
+	return ["off", "minimal", "low", "medium", "high", "xhigh", "session-default"].includes(String(value));
 }
 
 function isModelSetting(value: unknown): boolean {

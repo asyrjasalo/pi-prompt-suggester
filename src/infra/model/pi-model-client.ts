@@ -18,7 +18,7 @@ import {
 	type SeedKeyFileCategory,
 } from "../../domain/seed.js";
 import { renderForcedSeederFinalPrompt, renderSeederSystemPrompt, renderSeederUserPrompt } from "../../prompts/seeder-template.js";
-import { renderSuggestionPrompt } from "../../prompts/suggestion-template.js";
+import { renderSuggestionSystemPrompt, renderSuggestionUserPrompt } from "../../prompts/suggestion-template.js";
 import { renderTranscriptSteeringPrompt } from "../../prompts/transcript-steering-template.js";
 
 const execFileAsync = promisify(execFile);
@@ -533,17 +533,19 @@ export class PiModelClient implements ModelClient {
 				{ allowEmptyText: true },
 			);
 		}
+		const compactContext = context as SuggestionPromptContext;
+		const compactSessionId = this.runtime.getContext()?.sessionManager?.getSessionId();
 		return await this.completePrompt(
 			[
 				{
 					role: "user",
-					content: [{ type: "text", text: renderSuggestionPrompt(context as SuggestionPromptContext) }],
+					content: [{ type: "text", text: renderSuggestionUserPrompt(compactContext) }],
 					timestamp: Date.now(),
 				},
 			],
-			undefined,
+			renderSuggestionSystemPrompt(compactContext),
 			settings,
-			undefined,
+			compactSessionId,
 			{ suggestionMode: "compact" },
 			{ allowEmptyText: true },
 		);
@@ -573,11 +575,13 @@ export class PiModelClient implements ModelClient {
 				"You are the internal model used by pi-prompt-suggester. Follow the user prompt exactly and return only the requested format.",
 			messages,
 		};
+		const thinkingLevel = settings?.thinkingLevel;
 		const requestOptions = {
 			apiKey,
 			headers,
-			reasoning: settings?.thinkingLevel,
+			reasoning: thinkingLevel === "off" ? undefined : thinkingLevel,
 			sessionId,
+			cacheRetention: "long" as const,
 			onPayload: async (payload: unknown) => {
 				this.logger?.debug("suggestion.provider.payload", {
 					...debugMeta,

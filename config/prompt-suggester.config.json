@@ -14,7 +14,10 @@
     "customInstruction": "",
     "fastPathContinueOnError": true,
     "displayMode": "ghost",
-    "ghostAcceptKeys": ["space", "tab"],
+    "ghostAcceptKeys": [
+      "right",
+      "tab"
+    ],
     "maxAssistantTurnChars": 100000,
     "maxRecentUserPrompts": 20,
     "maxRecentUserPromptChars": 500,
@@ -45,6 +48,6 @@
     "seederModel": "session-default",
     "suggesterModel": "session-default",
     "seederThinking": "session-default",
-    "suggesterThinking": "session-default"
+    "suggesterThinking": "off"
   }
 }
