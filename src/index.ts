@@ -124,7 +124,11 @@ export default function suggester(pi: ExtensionAPI) {
 
 			composition.runtimeRef.markBootstrappedLeafId(sourceLeafId);
 			composition.runtimeRef.setLastTurnContext(historicalTurn);
-			void composition.orchestrators.agentEnd.handle(historicalTurn, generationId).catch(console.error);
+			const signal = composition.runtimeRef.getSignal();
+			void composition.orchestrators.agentEnd.handle(historicalTurn, generationId, signal).catch((error: unknown) => {
+				if (error instanceof Error && error.name === "AbortError") return;
+				console.error(error);
+			});
 		},
 		onAgentEnd: async (turn, ctx) => {
 			if (!turn) return;
@@ -132,7 +136,11 @@ export default function suggester(pi: ExtensionAPI) {
 			syncSuggestionUi(ctx, composition);
 			composition.runtimeRef.setLastTurnContext(turn);
 			const generationId = composition.runtimeRef.bumpEpoch();
-			void composition.orchestrators.agentEnd.handle(turn, generationId).catch(console.error);
+			const signal = composition.runtimeRef.getSignal();
+			void composition.orchestrators.agentEnd.handle(turn, generationId, signal).catch((error: unknown) => {
+				if (error instanceof Error && error.name === "AbortError") return;
+				console.error(error);
+			});
 		},
 		onUserSubmit: async (event: InputEvent, ctx) => {
 			const composition = await setRuntimeContext(ctx);

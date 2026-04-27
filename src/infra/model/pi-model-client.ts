@@ -582,6 +582,7 @@ export class PiModelClient implements ModelClient {
 			reasoning: thinkingLevel === "off" ? undefined : thinkingLevel,
 			sessionId,
 			cacheRetention: "long" as const,
+			signal: settings?.signal,
 			onPayload: async (payload: unknown) => {
 				this.logger?.debug("suggestion.provider.payload", {
 					...debugMeta,

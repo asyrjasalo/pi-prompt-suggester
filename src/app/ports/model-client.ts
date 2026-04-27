@@ -7,6 +7,7 @@ import type { TranscriptSuggestionPromptContext } from "../services/transcript-p
 export interface ModelInvocationSettings {
 	modelRef?: string;
 	thinkingLevel?: ThinkingLevel;
+	signal?: AbortSignal;
 }
 
 export type SuggestionModelContext = SuggestionPromptContext | TranscriptSuggestionPromptContext;

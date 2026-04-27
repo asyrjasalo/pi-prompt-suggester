@@ -9,6 +9,7 @@ export interface EditorHistoryState {
 export class RuntimeRef {
 	private currentContext: ExtensionContext | undefined;
 	private generationEpoch = 0;
+	private abortController = new AbortController();
 	private currentSuggestion: string | undefined;
 	private suggestionRevision = 0;
 	private lastTurnContext: TurnContext | undefined;
@@ -28,11 +29,17 @@ export class RuntimeRef {
 
 	public bumpEpoch(): number {
 		this.generationEpoch += 1;
+		this.abortController.abort();
+		this.abortController = new AbortController();
 		return this.generationEpoch;
 	}
 
 	public getEpoch(): number {
 		return this.generationEpoch;
+	}
+
+	public getSignal(): AbortSignal {
+		return this.abortController.signal;
 	}
 
 	public setSuggestion(text: string | undefined): void {
