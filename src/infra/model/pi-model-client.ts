@@ -22,7 +22,7 @@ import { renderSuggestionSystemPrompt, renderSuggestionUserPrompt } from "../../
 import { renderTranscriptSteeringPrompt } from "../../prompts/transcript-steering-template.js";
 
 const execFileAsync = promisify(execFile);
-const IGNORED_DIRS = new Set([".git", "node_modules", ".pi", "dist", "build", "coverage"]);
+const ALWAYS_IGNORED_DIRS = new Set([".git"]);
 const CLAUDE_BRIDGE_STREAM_SIMPLE_KEY = Symbol.for("claude-bridge:activeStreamSimple");
 
 export interface RuntimeContextProvider {
@@ -366,6 +366,7 @@ function validateSeedCoverage(draft: SeedDraft): { ok: boolean; reason?: string 
 export class PiModelClient implements ModelClient {
 	private readonly cwd: string;
 	private readonly warnedCompatibilityKeys = new Set<string>();
+	private readonly gitignoreCache = new Map<string, Set<string>>();
 
 	public constructor(
 		private readonly runtime: RuntimeContextProvider,
@@ -373,6 +374,26 @@ export class PiModelClient implements ModelClient {
 		cwd: string = process.cwd(),
 	) {
 		this.cwd = cwd;
+	}
+
+	private async ignoredNamesInDir(dir: string): Promise<Set<string>> {
+		if (this.gitignoreCache.has(dir)) return this.gitignoreCache.get(dir)!;
+		const names = new Set<string>(ALWAYS_IGNORED_DIRS);
+		try {
+			const content = await fs.readFile(path.join(dir, ".gitignore"), "utf8");
+			for (const raw of content.split(/\r?\n/)) {
+				const line = raw.trim();
+				if (!line || line.startsWith("#") || line.startsWith("!")) continue;
+				const stripped = line.replace(/^\//, "").replace(/\/$/, "");
+				// Only simple single-component patterns — no path separators, no wildcards
+				if (!stripped || stripped.includes("/") || stripped.includes("*") || stripped.includes("?")) continue;
+				names.add(stripped);
+			}
+		} catch {
+			// no .gitignore in this dir
+		}
+		this.gitignoreCache.set(dir, names);
+		return names;
 	}
 
 	public async generateSeed(input: {
@@ -765,9 +786,11 @@ export class PiModelClient implements ModelClient {
 	private async toolLs(args: Record<string, unknown>): Promise<string> {
 		const absolute = this.resolvePath(args.path);
 		const limit = Math.min(500, Math.max(1, Number(args.limit ?? 200)));
+		const ignored = await this.ignoredNamesInDir(absolute);
 		const entries = await fs.readdir(absolute, { withFileTypes: true });
 		const lines = entries
 			.sort((a, b) => a.name.localeCompare(b.name))
+			.filter((entry) => !ignored.has(entry.name))
 			.slice(0, limit)
 			.map((entry) => `${entry.isDirectory() ? "d" : "f"} ${path.relative(this.cwd, path.join(absolute, entry.name)) || "."}`);
 		return truncate(lines.join("\n") || "(empty)", 8000);
@@ -783,11 +806,12 @@ export class PiModelClient implements ModelClient {
 
 		const walk = async (dir: string): Promise<void> => {
 			if (results.length >= limit) return;
+			const ignored = await this.ignoredNamesInDir(dir);
 			const entries = await fs.readdir(dir, { withFileTypes: true });
 			for (const entry of entries) {
 				if (results.length >= limit) break;
 				if (entry.isDirectory()) {
-					if (IGNORED_DIRS.has(entry.name)) continue;
+					if (ignored.has(entry.name)) continue;
 					await walk(path.join(dir, entry.name));
 					continue;
 				}
@@ -828,6 +852,15 @@ export class PiModelClient implements ModelClient {
 
 	private async toolRead(args: Record<string, unknown>): Promise<string> {
 		const absolute = this.resolvePath(args.path);
+		// Walk each directory component and check if it's gitignored by its parent
+		const relative = path.relative(this.cwd, absolute);
+		const parts = relative.split(path.sep);
+		let currentDir = this.cwd;
+		for (const part of parts.slice(0, -1)) {
+			const ignored = await this.ignoredNamesInDir(currentDir);
+			if (ignored.has(part)) return `(skipped: '${part}' is gitignored)`;
+			currentDir = path.join(currentDir, part);
+		}
 		const offset = Math.max(1, Number(args.offset ?? 1));
 		const limit = Math.min(1200, Math.max(1, Number(args.limit ?? 220)));
 		const raw = await fs.readFile(absolute, "utf8");
