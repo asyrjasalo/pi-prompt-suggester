@@ -6,6 +6,7 @@ export type GhostAcceptKey = "space" | "right" | "tab";
 
 export interface SeedConfig {
 	maxDiffChars: number;
+	maxSteps: number;
 }
 
 export interface ReseedConfig {

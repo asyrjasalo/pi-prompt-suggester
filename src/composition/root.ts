@@ -84,7 +84,7 @@ export async function createAppComposition(pi: ExtensionAPI, cwd: string = proce
 		path.join(dataDir, ".pi", "suggester", "seed.json"),
 	);
 	const stateStore = new SessionStateStore(cwd, () => runtimeRef.getContext()?.sessionManager);
-	const modelClient = new PiModelClient(runtimeRef, logger, cwd);
+	const modelClient = new PiModelClient(runtimeRef, logger, cwd, config.seed.maxSteps);
 	const clock = new SystemClock();
 	const suggestionSink = new PiSuggestionSink(uiContext);
 

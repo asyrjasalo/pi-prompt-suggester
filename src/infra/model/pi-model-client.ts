@@ -367,13 +367,16 @@ export class PiModelClient implements ModelClient {
 	private readonly cwd: string;
 	private readonly warnedCompatibilityKeys = new Set<string>();
 	private readonly gitignoreCache = new Map<string, Set<string>>();
+	private readonly maxSeederSteps: number;
 
 	public constructor(
 		private readonly runtime: RuntimeContextProvider,
 		private readonly logger?: Logger,
 		cwd: string = process.cwd(),
+		maxSeederSteps: number = 16,
 	) {
 		this.cwd = cwd;
+		this.maxSeederSteps = maxSeederSteps;
 	}
 
 	private async ignoredNamesInDir(dir: string): Promise<Set<string>> {
@@ -405,7 +408,7 @@ export class PiModelClient implements ModelClient {
 		const runId = input.runId ?? `seed-${Date.now().toString(36)}`;
 		const systemPrompt = renderSeederSystemPrompt();
 		const history: SeederHistoryEntry[] = [];
-		const maxSteps = 16;
+		const maxSteps = this.maxSeederSteps;
 		let usage = createEmptyUsage();
 		this.logger?.info("seeder.run.started", {
 			runId,

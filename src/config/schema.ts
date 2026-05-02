@@ -82,8 +82,9 @@ interface SectionNormalizationResult<T> {
 
 const seedValidators: ValidatorMap<SeedConfig> = {
 	maxDiffChars: isPositiveInteger,
+	maxSteps: isPositiveInteger,
 };
-const seedShape: SeedConfig = { maxDiffChars: 1 };
+const seedShape: SeedConfig = { maxDiffChars: 1, maxSteps: 1 };
 
 const reseedValidators: ValidatorMap<ReseedConfig> = {
 	enabled: isBoolean,
