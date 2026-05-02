@@ -29,6 +29,10 @@ export class StalenessChecker {
 
 	public async check(seed: SeedArtifact | null): Promise<StalenessCheckResult> {
 		if (!seed) {
+			const headCommit = await this.deps.vcs.getHeadCommit();
+			if (!headCommit) {
+				return { stale: false };
+			}
 			return {
 				stale: true,
 				trigger: {
