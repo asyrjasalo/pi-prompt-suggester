@@ -33,7 +33,7 @@ test("validateConfig rejects unknown keys and invalid values", () => {
 	assert.equal(
 		validateConfig({
 			...defaultConfig,
-			suggestion: { ...defaultConfig.suggestion, ghostAcceptKeys: ["space", "tab"] },
+			suggestion: { ...defaultConfig.suggestion, ghostAcceptKeys: ["space", "space"] },
 		}),
 		false,
 	);

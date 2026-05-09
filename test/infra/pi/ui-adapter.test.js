@@ -4,7 +4,7 @@ import {
 	acceptWidgetSuggestion,
 	PiSuggestionSink,
 	refreshSuggesterUi,
-	WIDGET_ACCEPT_SHORTCUT_LABEL,
+	widgetAcceptHintText,
 } from "../../../dist/infra/pi/ui-adapter.js";
 
 function createTheme() {
@@ -69,6 +69,7 @@ test("PiSuggestionSink keeps ghost suggestions even before idle flips", async ()
 			return undefined;
 		},
 		suggestionDisplayMode: "ghost",
+		ghostAcceptKeys: ["space", "tab"],
 		prefillOnlyWhenEditorEmpty: true,
 		showUsageInPanel: true,
 		showPanelStatus: true,
@@ -78,7 +79,7 @@ test("PiSuggestionSink keeps ghost suggestions even before idle flips", async ()
 	await sink.showSuggestion("hello world", { generationId: 1 });
 
 	assert.equal(runtime.suggestion, "hello world");
-	assert.match(runtime.panelSuggestionStatus, /Space accepts/);
+	assert.match(runtime.panelSuggestionStatus, /Space\/Tab accepts/);
 });
 
 test("PiSuggestionSink retains suggestions even when the editor text is temporarily incompatible", async () => {
@@ -135,6 +136,7 @@ test("PiSuggestionSink retains suggestions even when the editor text is temporar
 			return undefined;
 		},
 		suggestionDisplayMode: "ghost",
+		ghostAcceptKeys: ["space", "tab"],
 		prefillOnlyWhenEditorEmpty: true,
 		showUsageInPanel: true,
 		showPanelStatus: true,
@@ -182,6 +184,7 @@ test("refreshSuggesterUi still renders the panel when a suggestion exists", () =
 			return undefined;
 		},
 		suggestionDisplayMode: "widget",
+		ghostAcceptKeys: ["space", "tab"],
 		showUsageInPanel: true,
 		showPanelStatus: true,
 	};
@@ -193,7 +196,7 @@ test("refreshSuggesterUi still renders the panel when a suggestion exists", () =
 	const rendered = lastWidget.content(null, createTheme()).render(80);
 	assert.equal(rendered.some((line) => line.includes("hello world")), true);
 	assert.equal(rendered.some((line) => line.includes("prompt suggestion")), true);
-	assert.equal(rendered.some((line) => line.includes(WIDGET_ACCEPT_SHORTCUT_LABEL)), true);
+	assert.equal(rendered.some((line) => line.includes(widgetAcceptHintText(["space", "tab"]))), true);
 	assert.equal(rendered.some((line) => line.includes("suggester usage: ↑10 ↓5 R2 $0.001 (1 sugg, 0 seed)")), true);
 });
 
@@ -228,6 +231,7 @@ test("refreshSuggesterUi hides widget suggestion content after switching back to
 		},
 		showUsageInPanel: true,
 		showPanelStatus: true,
+		ghostAcceptKeys: ["space", "tab"],
 	};
 
 	refreshSuggesterUi(runtime);
@@ -237,7 +241,7 @@ test("refreshSuggesterUi hides widget suggestion content after switching back to
 	const rendered = lastWidget.content(null, createTheme()).render(80);
 	assert.equal(rendered.some((line) => line.includes("hello world")), false);
 	assert.equal(rendered.some((line) => line.includes("prompt suggestion")), false);
-	assert.equal(rendered.some((line) => line.includes("F2 accepts")), false);
+	assert.equal(rendered.some((line) => line.includes(widgetAcceptHintText(["space", "tab"]))), false);
 	assert.equal(rendered.some((line) => line.includes("suggester usage: ↑10 ↓5 R2 $0.001 (1 sugg, 0 seed)")), true);
 });
 

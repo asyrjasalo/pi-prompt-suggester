@@ -15,12 +15,17 @@ import {
 	handleAbCommand,
 	renderStatus,
 } from "./infra/pi/command-handlers.js";
+import { matchesGhostAcceptKey } from "./infra/pi/ghost-accept-keys.js";
 import { acceptWidgetSuggestion, refreshSuggesterUi } from "./infra/pi/ui-adapter.js";
 import { createUiContext, type UiContextLike } from "./infra/pi/ui-context.js";
+import { usesWidgetSuggestion } from "./infra/pi/suggestion-display-mode.js";
 
 export default function suggester(pi: ExtensionAPI) {
 	let compositionPromise: Promise<AppComposition> | undefined;
 	let ghostEditorInstallState: GhostEditorInstallState | undefined;
+	/** Latest composition with context; used by widget terminal accept hook. */
+	let hotComposition: AppComposition | undefined;
+	let widgetAcceptTerminalUnsub: (() => void) | undefined;
 
 	function syncGhostEditorInstallation(ctx: ExtensionContext, composition: AppComposition): void {
 		if (!ctx.hasUI) return;
@@ -69,7 +74,28 @@ export default function suggester(pi: ExtensionAPI) {
 	async function setRuntimeContext(ctx: ExtensionContext): Promise<AppComposition> {
 		const composition = await getComposition();
 		composition.runtimeRef.setContext(ctx);
+		hotComposition = composition;
 		return composition;
+	}
+
+	function attachWidgetAcceptTerminalInput(ctx: ExtensionContext): void {
+		widgetAcceptTerminalUnsub?.();
+		widgetAcceptTerminalUnsub = ctx.ui.onTerminalInput((data: string) => {
+			const composition = hotComposition;
+			if (!composition) return undefined;
+			if (!usesWidgetSuggestion(composition.config.suggestion.displayMode)) return undefined;
+			if (!composition.runtimeRef.getSuggestion()) return undefined;
+			if (!matchesGhostAcceptKey(data, composition.config.suggestion.ghostAcceptKeys)) return undefined;
+
+			const result = acceptWidgetSuggestion(getUiContext(composition));
+			if (result === "missing-suggestion" || result === "unavailable") return undefined;
+
+			const ui = composition.runtimeRef.getContext();
+			if (result === "mismatch" && ui?.hasUI) {
+				ui.ui.notify("Current editor text no longer matches the suggestion.", "warning");
+			}
+			return { consume: true };
+		});
 	}
 
 	function getUiContext(composition: AppComposition): UiContextLike {
@@ -87,20 +113,12 @@ export default function suggester(pi: ExtensionAPI) {
 		refreshSuggesterUi(getUiContext(composition));
 	}
 
-	pi.registerShortcut("f2", {
-		description: "Accept prompt suggestion",
-		handler: async (ctx) => {
-			const composition = await setRuntimeContext(ctx);
-			const result = acceptWidgetSuggestion(getUiContext(composition));
-			if (result === "mismatch") {
-				ctx.ui.notify("Current editor text no longer matches the suggestion.", "warning");
-			}
-		},
-	});
-
 	const adapter = new PiExtensionAdapter(pi, {
 		onSessionStart: async (ctx) => {
 			const composition = await setRuntimeContext(ctx);
+			if (ctx.hasUI) {
+				attachWidgetAcceptTerminalInput(ctx);
+			}
 			const generationId = composition.runtimeRef.bumpEpoch();
 			syncSuggestionUi(ctx, composition);
 			await composition.orchestrators.sessionStart.handle();

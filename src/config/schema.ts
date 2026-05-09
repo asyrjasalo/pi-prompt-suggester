@@ -127,7 +127,7 @@ const suggestionShape: SuggestionConfig = {
 	noSuggestionToken: "",
 	customInstruction: "",
 	fastPathContinueOnError: true,
-	displayMode: "ghost",
+	displayMode: "widget",
 	ghostAcceptKeys: ["space"],
 	maxAssistantTurnChars: 1,
 	maxRecentUserPrompts: 1,

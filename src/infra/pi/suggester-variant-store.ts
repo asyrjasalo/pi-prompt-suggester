@@ -152,10 +152,10 @@ export class SuggesterVariantStore {
 	private readonly resultsPath: string;
 	private state: VariantFile = DEFAULT_FILE;
 
-	public constructor(private readonly cwd: string = process.cwd()) {
-		const dataDir = os.homedir();
-		this.filePath = path.join(dataDir, ".pi", "suggester", "variants.json");
-		this.resultsPath = path.join(dataDir, ".pi", "suggester", "ab-results.ndjson");
+	/** Root directory for `~/.pi/suggester`-style layout (defaults to user home). */
+	public constructor(private readonly dataRoot: string = os.homedir()) {
+		this.filePath = path.join(this.dataRoot, ".pi", "suggester", "variants.json");
+		this.resultsPath = path.join(this.dataRoot, ".pi", "suggester", "ab-results.ndjson");
 	}
 
 	public async init(): Promise<void> {

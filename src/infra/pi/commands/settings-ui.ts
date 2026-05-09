@@ -22,7 +22,7 @@ export async function handleSettingsUiCommand(
 	let activeScope: ConfigScope = "user";
 	const thinkingOptions = [...THINKING_LEVELS, SESSION_DEFAULT];
 	const strategyOptions = ["compact", "transcript-steering"] as const;
-	const suggestionDisplayOptions = ["ghost", "widget"] as const;
+	const suggestionDisplayOptions = ["widget", "ghost"] as const;
 
 	const formatScopeName = (scope: ConfigScope): string => scope === "project" ? "Project override" : "User override";
 	const formatValue = (value: unknown): string => {

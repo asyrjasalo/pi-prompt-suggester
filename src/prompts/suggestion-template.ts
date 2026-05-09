@@ -12,6 +12,11 @@ function renderChangedExamples(
 		.join("\n")}`;
 }
 
+/** Alias for {@link renderSuggestionSystemPrompt} (single-call-site tests). */
+export function renderSuggestionPrompt(context: SuggestionPromptContext): string {
+	return renderSuggestionSystemPrompt(context);
+}
+
 export function renderSuggestionSystemPrompt(context: SuggestionPromptContext): string {
 	const intentSeed = context.intentSeed
 		? JSON.stringify(

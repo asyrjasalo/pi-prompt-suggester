@@ -55,7 +55,7 @@ function createRepoSeedKey(cwd: string): string {
 export async function createAppComposition(pi: ExtensionAPI, cwd: string = process.cwd()): Promise<AppComposition> {
 	const config = await new FileConfigLoader(cwd).load();
 	const runtimeRef = new RuntimeRef();
-	const variantStore = new SuggesterVariantStore(cwd);
+	const variantStore = new SuggesterVariantStore();
 	await variantStore.init();
 	const uiContext = createUiContext({
 		runtimeRef,

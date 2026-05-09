@@ -1,12 +1,17 @@
 import type { ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { truncateToWidth, visibleWidth, wrapTextWithAnsi } from "@mariozechner/pi-tui";
 import type { SuggestionSink } from "../../app/orchestrators/turn-end.js";
+import type { GhostAcceptKey } from "../../config/types.js";
 import type { SuggestionUsageStats } from "../../domain/state.js";
 import { formatTokens } from "./display.js";
+import { formatGhostAcceptKeys } from "./ghost-accept-keys.js";
 import { getSuggestionStatusText, usesGhostEditor, usesWidgetSuggestion } from "./suggestion-display-mode.js";
 import type { UiContextLike } from "./ui-context.js";
 
-export const WIDGET_ACCEPT_SHORTCUT_LABEL = "F2 accepts";
+/** Widget-mode footer hint; matches `ghostAcceptKeys` (same labels as ghost editor). */
+export function widgetAcceptHintText(ghostAcceptKeys: readonly GhostAcceptKey[] | undefined): string {
+	return `${formatGhostAcceptKeys(ghostAcceptKeys)} accepts`;
+}
 
 function isStaleContextError(error: unknown): boolean {
 	return error instanceof Error && error.message.includes("extension ctx is stale");
@@ -57,7 +62,8 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 	const widgetMode = usesWidgetSuggestion(runtime.suggestionDisplayMode);
 	const suggestionText = widgetMode ? runtime.getSuggestion() : undefined;
 	const suggestionStatus = runtime.showPanelStatus && widgetMode ? runtime.getPanelSuggestionStatus() : undefined;
-	const suggestionHint = suggestionText ? themeHintText(widgetMode) : undefined;
+	const suggestionHint =
+		widgetMode && suggestionText ? widgetAcceptHintText(runtime.ghostAcceptKeys) : undefined;
 	const usageStatus = runtime.showUsageInPanel ? runtime.getPanelUsageStatus() : undefined;
 	const logStatus = runtime.getPanelLogStatus();
 	if (!suggestionText && !suggestionStatus && !logStatus && !usageStatus) {
@@ -71,21 +77,42 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 			invalidate() {},
 			render(width: number): string[] {
 				const lines: string[] = [];
+				const hintAnsi =
+					suggestionHint ? theme.fg("muted", ` · ${suggestionHint}`) : "";
+				const hintWidth = hintAnsi ? visibleWidth(hintAnsi) : 0;
 				if (suggestionText) {
 					const sourceLines = suggestionText.split("\n");
+					let inlinedHintOnFirstVisualLine = false;
 					for (let index = 0; index < sourceLines.length; index += 1) {
 						const prefix = index === 0 ? "✦ " : "  ";
-						const wrapped = wrapTextWithAnsi(theme.fg("accent", `${prefix}${sourceLines[index] ?? ""}`), Math.max(10, width));
-						for (const wrappedLine of wrapped.length > 0 ? wrapped : [theme.fg("accent", prefix.trimEnd())]) {
-							const truncated = truncateToWidth(wrappedLine, Math.max(10, width), "", true);
+						const wrapWidth =
+							index === 0 && hintWidth > 0 && !inlinedHintOnFirstVisualLine
+								? Math.max(10, width - hintWidth)
+								: Math.max(10, width);
+						const wrapped = wrapTextWithAnsi(
+							theme.fg("accent", `${prefix}${sourceLines[index] ?? ""}`),
+							wrapWidth,
+						);
+						const segments = wrapped.length > 0 ? wrapped : [theme.fg("accent", prefix.trimEnd())];
+						let segIdx = 0;
+						for (const wrappedLine of segments) {
+							let truncated: string;
+							if (index === 0 && segIdx === 0 && hintAnsi && !inlinedHintOnFirstVisualLine) {
+								truncated = truncateToWidth(wrappedLine + hintAnsi, width, "", true);
+								inlinedHintOnFirstVisualLine = true;
+							}
+							else {
+								truncated = truncateToWidth(wrappedLine, Math.max(10, width), "", true);
+							}
 							const pad = " ".repeat(Math.max(0, width - visibleWidth(truncated)));
 							lines.push(truncated + pad);
+							segIdx += 1;
 						}
 					}
 				}
 				const parts: string[] = [];
 				if (suggestionStatus) parts.push(theme.fg("accent", suggestionStatus));
-				if (suggestionHint) parts.push(theme.fg("muted", suggestionHint));
+				if (suggestionHint && !suggestionText) parts.push(theme.fg("muted", suggestionHint));
 				if (logStatus) parts.push(formatPanelLog(ctx, logStatus));
 				const line = parts.join(" · ");
 				if (line) {
@@ -103,10 +130,6 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 		}),
 		{ placement: "belowEditor" },
 	);
-}
-
-function themeHintText(widgetMode: boolean): string | undefined {
-	return widgetMode ? WIDGET_ACCEPT_SHORTCUT_LABEL : undefined;
 }
 
 export function acceptWidgetSuggestion(runtime: UiContextLike): "accepted" | "missing-suggestion" | "mismatch" | "unavailable" {

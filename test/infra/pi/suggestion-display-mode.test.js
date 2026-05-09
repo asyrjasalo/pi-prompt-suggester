@@ -20,7 +20,7 @@ test("suggestion display mode helpers distinguish ghost and widget modes", () =>
 test("getSuggestionStatusText keeps ghost hints out of widget mode", () => {
 	assert.equal(
 		getSuggestionStatusText({ displayMode: "ghost", canGhostInEditor: true }),
-		"prompt suggestion · Space accepts",
+		"prompt suggestion · Space/Tab accepts",
 	);
 	assert.equal(
 		getSuggestionStatusText({ displayMode: "ghost", canGhostInEditor: true, ghostAcceptKeys: ["space", "right"] }),
