@@ -14,6 +14,8 @@ export interface UiContextLike {
 	getEpoch(): number;
 	getSuggestion(): string | undefined;
 	setSuggestion(text: string | undefined): void;
+	getWidgetRestoreSuggestion(): string | undefined;
+	setWidgetRestoreSuggestion(text: string | undefined): void;
 	getPanelSuggestionStatus(): string | undefined;
 	setPanelSuggestionStatus(text: string | undefined): void;
 	getPanelUsageStatus(): string | undefined;
@@ -40,6 +42,8 @@ export function createUiContext(params: {
 		getEpoch: () => runtimeRef.getEpoch(),
 		getSuggestion: () => runtimeRef.getSuggestion(),
 		setSuggestion: (text) => runtimeRef.setSuggestion(text),
+		getWidgetRestoreSuggestion: () => runtimeRef.getWidgetRestoreSuggestion(),
+		setWidgetRestoreSuggestion: (text) => runtimeRef.setWidgetRestoreSuggestion(text),
 		getPanelSuggestionStatus: () => runtimeRef.getPanelSuggestionStatus(),
 		setPanelSuggestionStatus: (text) => runtimeRef.setPanelSuggestionStatus(text),
 		getPanelUsageStatus: () => runtimeRef.getPanelUsageStatus(),

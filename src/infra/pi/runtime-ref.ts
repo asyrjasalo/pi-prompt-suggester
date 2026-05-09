@@ -11,6 +11,8 @@ export class RuntimeRef {
 	private generationEpoch = 0;
 	private abortController = new AbortController();
 	private currentSuggestion: string | undefined;
+	/** After widget accept clears `currentSuggestion`, holds text to show again when editor emptied. */
+	private widgetRestoreSuggestion: string | undefined;
 	private suggestionRevision = 0;
 	private lastTurnContext: TurnContext | undefined;
 	private lastBootstrappedLeafId: string | undefined;
@@ -45,6 +47,14 @@ export class RuntimeRef {
 	public setSuggestion(text: string | undefined): void {
 		this.currentSuggestion = text?.trim() || undefined;
 		this.suggestionRevision += 1;
+	}
+
+	public setWidgetRestoreSuggestion(text: string | undefined): void {
+		this.widgetRestoreSuggestion = text?.trim() || undefined;
+	}
+
+	public getWidgetRestoreSuggestion(): string | undefined {
+		return this.widgetRestoreSuggestion;
 	}
 
 	public getSuggestion(): string | undefined {

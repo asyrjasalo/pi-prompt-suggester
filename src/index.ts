@@ -84,17 +84,17 @@ export default function suggester(pi: ExtensionAPI) {
 			const composition = hotComposition;
 			if (!composition) return undefined;
 			if (!usesWidgetSuggestion(composition.config.suggestion.displayMode)) return undefined;
-			if (!composition.runtimeRef.getSuggestion()) return undefined;
-			if (!matchesGhostAcceptKey(data, composition.config.suggestion.ghostAcceptKeys)) return undefined;
 
-			const result = acceptWidgetSuggestion(getUiContext(composition));
-			if (result === "missing-suggestion" || result === "unavailable") return undefined;
-
-			const ui = composition.runtimeRef.getContext();
-			if (result === "mismatch" && ui?.hasUI) {
-				ui.ui.notify("Current editor text no longer matches the suggestion.", "warning");
+			const runtime = composition.runtimeRef;
+			const hasSuggestion = runtime.getSuggestion() ?? runtime.getWidgetRestoreSuggestion();
+			if (hasSuggestion && matchesGhostAcceptKey(data, composition.config.suggestion.ghostAcceptKeys)) {
+				const result = acceptWidgetSuggestion(getUiContext(composition));
+				if (result === "accepted") return { consume: true };
+				return undefined;
 			}
-			return { consume: true };
+
+			refreshSuggesterUi(getUiContext(composition));
+			return undefined;
 		});
 	}
 

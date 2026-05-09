@@ -17,6 +17,18 @@ function isStaleContextError(error: unknown): boolean {
 	return error instanceof Error && error.message.includes("extension ctx is stale");
 }
 
+function editorHasTypedContent(ctx: ExtensionContext): boolean {
+	return ctx.ui.getEditorText().trim().length > 0;
+}
+
+/** Widget panel text: active suggestion, or restore buffer when editor cleared after accept. Hidden while user has typed anything (trimmed). */
+function effectiveWidgetSuggestionText(runtime: UiContextLike, ctx: ExtensionContext): string | undefined {
+	if (editorHasTypedContent(ctx)) return undefined;
+	const primary = runtime.getSuggestion();
+	if (primary) return primary;
+	return runtime.getWidgetRestoreSuggestion();
+}
+
 function getSafeUiContext(runtime: UiContextLike): ExtensionContext | undefined {
 	try {
 		const ctx = runtime.getContext();
@@ -60,8 +72,11 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 	ctx.ui.setStatus("suggester-usage", undefined);
 
 	const widgetMode = usesWidgetSuggestion(runtime.suggestionDisplayMode);
-	const suggestionText = widgetMode ? runtime.getSuggestion() : undefined;
-	const suggestionStatus = runtime.showPanelStatus && widgetMode ? runtime.getPanelSuggestionStatus() : undefined;
+	const suggestionText = widgetMode && ctx ? effectiveWidgetSuggestionText(runtime, ctx) : undefined;
+	const suggestionStatus =
+		runtime.showPanelStatus && widgetMode && ctx && !editorHasTypedContent(ctx)
+			? runtime.getPanelSuggestionStatus()
+			: undefined;
 	const suggestionHint =
 		widgetMode && suggestionText ? widgetAcceptHintText(runtime.ghostAcceptKeys) : undefined;
 	const usageStatus = runtime.showUsageInPanel ? runtime.getPanelUsageStatus() : undefined;
@@ -135,12 +150,13 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 export function acceptWidgetSuggestion(runtime: UiContextLike): "accepted" | "missing-suggestion" | "mismatch" | "unavailable" {
 	const ctx = getSafeUiContext(runtime);
 	if (!ctx || !usesWidgetSuggestion(runtime.suggestionDisplayMode)) return "unavailable";
-	const suggestion = runtime.getSuggestion();
+	const suggestion = runtime.getSuggestion() ?? runtime.getWidgetRestoreSuggestion();
 	if (!suggestion) return "missing-suggestion";
 	const editorText = ctx.ui.getEditorText();
 	if (editorText.length > 0 && !suggestion.startsWith(editorText)) return "mismatch";
 	ctx.ui.setEditorText(suggestion);
 	runtime.setSuggestion(undefined);
+	runtime.setWidgetRestoreSuggestion(suggestion);
 	runtime.setPanelSuggestionStatus(undefined);
 	refreshSuggesterUi(runtime);
 	return "accepted";
@@ -165,6 +181,7 @@ export class PiSuggestionSink implements SuggestionSink {
 				: trimmedEditorText.length === 0 || prefixCompatible);
 
 		this.runtime.setSuggestion(text);
+		this.runtime.setWidgetRestoreSuggestion(undefined);
 		this.runtime.setPanelSuggestionStatus(getSuggestionStatusText({
 			displayMode: this.runtime.suggestionDisplayMode,
 			restored: options?.restore,
@@ -177,6 +194,7 @@ export class PiSuggestionSink implements SuggestionSink {
 	public async clearSuggestion(options?: { generationId?: number }): Promise<void> {
 		if (options?.generationId !== undefined && options.generationId !== this.runtime.getEpoch()) return;
 		this.runtime.setSuggestion(undefined);
+		this.runtime.setWidgetRestoreSuggestion(undefined);
 		this.runtime.setPanelSuggestionStatus(undefined);
 		refreshSuggesterUi(this.runtime);
 	}

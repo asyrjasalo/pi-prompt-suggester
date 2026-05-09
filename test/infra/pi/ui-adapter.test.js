@@ -49,6 +49,10 @@ test("PiSuggestionSink keeps ghost suggestions even before idle flips", async ()
 		setSuggestion(text) {
 			this.suggestion = text;
 		},
+		getWidgetRestoreSuggestion() {
+			return undefined;
+		},
+		setWidgetRestoreSuggestion() {},
 		getPanelSuggestionStatus() {
 			return this.panelSuggestionStatus;
 		},
@@ -116,6 +120,10 @@ test("PiSuggestionSink retains suggestions even when the editor text is temporar
 		setSuggestion(text) {
 			this.suggestion = text;
 		},
+		getWidgetRestoreSuggestion() {
+			return undefined;
+		},
+		setWidgetRestoreSuggestion() {},
 		getPanelSuggestionStatus() {
 			return this.panelSuggestionStatus;
 		},
@@ -158,6 +166,9 @@ test("refreshSuggesterUi still renders the panel when a suggestion exists", () =
 			setWidget(key, content) {
 				lastWidget = { key, content };
 			},
+			getEditorText() {
+				return "";
+			},
 			theme: createTheme(),
 		},
 		isIdle() {
@@ -174,6 +185,10 @@ test("refreshSuggesterUi still renders the panel when a suggestion exists", () =
 		getSuggestion() {
 			return "hello world";
 		},
+		getWidgetRestoreSuggestion() {
+			return undefined;
+		},
+		setWidgetRestoreSuggestion() {},
 		getPanelSuggestionStatus() {
 			return "prompt suggestion";
 		},
@@ -200,6 +215,58 @@ test("refreshSuggesterUi still renders the panel when a suggestion exists", () =
 	assert.equal(rendered.some((line) => line.includes("suggester usage: ↑10 ↓5 R2 $0.001 (1 sugg, 0 seed)")), true);
 });
 
+test("refreshSuggesterUi hides widget suggestion when editor already contains text", () => {
+	let lastWidget;
+	const ctx = {
+		hasUI: true,
+		ui: {
+			setStatus() {},
+			setWidget(key, content) {
+				lastWidget = { key, content };
+			},
+			getEditorText() {
+				return "user draft";
+			},
+			theme: createTheme(),
+		},
+		isIdle() {
+			return false;
+		},
+		hasPendingMessages() {
+			return true;
+		},
+	};
+	const runtime = {
+		getContext() {
+			return ctx;
+		},
+		getSuggestion() {
+			return "suggested follow-up prompt";
+		},
+		getWidgetRestoreSuggestion() {
+			return undefined;
+		},
+		setWidgetRestoreSuggestion() {},
+		getPanelSuggestionStatus() {
+			return "panel suggestion status";
+		},
+		getPanelUsageStatus() {
+			return undefined;
+		},
+		getPanelLogStatus() {
+			return undefined;
+		},
+		suggestionDisplayMode: "widget",
+		ghostAcceptKeys: ["space", "tab"],
+		showUsageInPanel: false,
+		showPanelStatus: true,
+	};
+
+	refreshSuggesterUi(runtime);
+
+	assert.equal(lastWidget?.content, undefined);
+});
+
 test("refreshSuggesterUi hides widget suggestion content after switching back to ghost mode", () => {
 	let lastWidget;
 	const ctx = {
@@ -208,6 +275,9 @@ test("refreshSuggesterUi hides widget suggestion content after switching back to
 			setStatus() {},
 			setWidget(key, content) {
 				lastWidget = { key, content };
+			},
+			getEditorText() {
+				return "";
 			},
 			theme: createTheme(),
 		},
@@ -220,6 +290,10 @@ test("refreshSuggesterUi hides widget suggestion content after switching back to
 		getSuggestion() {
 			return "hello world";
 		},
+		getWidgetRestoreSuggestion() {
+			return undefined;
+		},
+		setWidgetRestoreSuggestion() {},
 		getPanelSuggestionStatus() {
 			return "prompt suggestion";
 		},
@@ -245,9 +319,102 @@ test("refreshSuggesterUi hides widget suggestion content after switching back to
 	assert.equal(rendered.some((line) => line.includes("suggester usage: ↑10 ↓5 R2 $0.001 (1 sugg, 0 seed)")), true);
 });
 
+test("refreshSuggesterUi shows widget restore text when editor empty and primary suggestion cleared", () => {
+	let lastWidget;
+	const ctx = {
+		hasUI: true,
+		ui: {
+			setStatus() {},
+			setWidget(key, content) {
+				lastWidget = { key, content };
+			},
+			getEditorText() {
+				return "";
+			},
+			theme: createTheme(),
+		},
+	};
+	const runtime = {
+		getContext() {
+			return ctx;
+		},
+		getSuggestion() {
+			return undefined;
+		},
+		getWidgetRestoreSuggestion() {
+			return "restored line";
+		},
+		setWidgetRestoreSuggestion() {},
+		getPanelSuggestionStatus() {
+			return undefined;
+		},
+		getPanelUsageStatus() {
+			return undefined;
+		},
+		getPanelLogStatus() {
+			return undefined;
+		},
+		suggestionDisplayMode: "widget",
+		ghostAcceptKeys: ["space", "tab"],
+		showUsageInPanel: false,
+		showPanelStatus: false,
+	};
+
+	refreshSuggesterUi(runtime);
+	const rendered = lastWidget.content(null, createTheme()).render(80);
+	assert.equal(rendered.some((line) => line.includes("restored line")), true);
+});
+
+test("refreshSuggesterUi hides widget restore text when editor is not empty", () => {
+	let lastWidget;
+	const ctx = {
+		hasUI: true,
+		ui: {
+			setStatus() {},
+			setWidget(key, content) {
+				lastWidget = { key, content };
+			},
+			getEditorText() {
+				return "x";
+			},
+			theme: createTheme(),
+		},
+	};
+	const runtime = {
+		getContext() {
+			return ctx;
+		},
+		getSuggestion() {
+			return undefined;
+		},
+		getWidgetRestoreSuggestion() {
+			return "restored line";
+		},
+		setWidgetRestoreSuggestion() {},
+		getPanelSuggestionStatus() {
+			return undefined;
+		},
+		getPanelUsageStatus() {
+			return "suggester usage: ↑1 ↓1 R0 $0.000 (1 sugg, 0 seed)";
+		},
+		getPanelLogStatus() {
+			return undefined;
+		},
+		suggestionDisplayMode: "widget",
+		ghostAcceptKeys: ["space", "tab"],
+		showUsageInPanel: true,
+		showPanelStatus: false,
+	};
+
+	refreshSuggesterUi(runtime);
+	const rendered = lastWidget.content(null, createTheme()).render(80);
+	assert.equal(rendered.some((line) => line.includes("restored line")), false);
+});
+
 test("acceptWidgetSuggestion materializes the suggestion into the default editor", () => {
 	const runtime = {
 		suggestion: "hello world",
+		widgetRestore: undefined,
 		panelSuggestionStatus: "prompt suggestion",
 		editorText: "hello",
 		getContext() {
@@ -269,6 +436,12 @@ test("acceptWidgetSuggestion materializes the suggestion into the default editor
 		},
 		setSuggestion(text) {
 			this.suggestion = text;
+		},
+		getWidgetRestoreSuggestion() {
+			return this.widgetRestore;
+		},
+		setWidgetRestoreSuggestion(text) {
+			this.widgetRestore = text;
 		},
 		getPanelSuggestionStatus() {
 			return this.panelSuggestionStatus;
@@ -296,12 +469,14 @@ test("acceptWidgetSuggestion materializes the suggestion into the default editor
 	assert.equal(acceptWidgetSuggestion(runtime), "accepted");
 	assert.equal(runtime.editorText, "hello world");
 	assert.equal(runtime.suggestion, undefined);
+	assert.equal(runtime.widgetRestore, "hello world");
 	assert.equal(runtime.panelSuggestionStatus, undefined);
 });
 
 test("acceptWidgetSuggestion refuses to overwrite diverged editor text", () => {
 	const runtime = {
 		suggestion: "hello world",
+		widgetRestore: undefined,
 		editorText: "different prompt",
 		getContext() {
 			return {
@@ -322,6 +497,12 @@ test("acceptWidgetSuggestion refuses to overwrite diverged editor text", () => {
 		},
 		setSuggestion(text) {
 			this.suggestion = text;
+		},
+		getWidgetRestoreSuggestion() {
+			return this.widgetRestore;
+		},
+		setWidgetRestoreSuggestion(text) {
+			this.widgetRestore = text;
 		},
 		getPanelSuggestionStatus() {
 			return undefined;
@@ -373,6 +554,10 @@ test("PiSuggestionSink writes usage into the panel instead of the footer status 
 			return undefined;
 		},
 		setSuggestion() {},
+		getWidgetRestoreSuggestion() {
+			return undefined;
+		},
+		setWidgetRestoreSuggestion() {},
 		getPanelSuggestionStatus() {
 			return undefined;
 		},
@@ -451,6 +636,7 @@ test("PiSuggestionSink shows widget suggestions when widget mode is enabled", as
 	const runtime = {
 		epoch: 1,
 		suggestion: undefined,
+		widgetRestore: "stale",
 		panelSuggestionStatus: undefined,
 		panelUsageStatus: undefined,
 		getContext() {
@@ -474,6 +660,12 @@ test("PiSuggestionSink shows widget suggestions when widget mode is enabled", as
 		},
 		setSuggestion(text) {
 			this.suggestion = text;
+		},
+		getWidgetRestoreSuggestion() {
+			return this.widgetRestore;
+		},
+		setWidgetRestoreSuggestion(text) {
+			this.widgetRestore = text;
 		},
 		getPanelSuggestionStatus() {
 			return this.panelSuggestionStatus;
@@ -504,6 +696,7 @@ test("PiSuggestionSink shows widget suggestions when widget mode is enabled", as
 	await sink.showSuggestion("hello world", { generationId: 1 });
 
 	assert.equal(runtime.panelSuggestionStatus, "prompt suggestion");
+	assert.equal(runtime.widgetRestore, undefined);
 });
 
 test("refreshSuggesterUi hides orphan usage when usage display is disabled", () => {
