@@ -14,12 +14,8 @@
     "noSuggestionToken": "[no suggestion]",
     "customInstruction": "",
     "fastPathContinueOnError": true,
-    "displayMode": "ghost",
-    "ghostAcceptKeys": [
-      "right",
-      "tab"
-    ],
-    "maxAssistantTurnChars": 100000,
+    "displayMode": "widget",
+    "maxAssistantTurnChars": 10000,
     "maxRecentUserPrompts": 20,
     "maxRecentUserPromptChars": 500,
     "maxToolSignals": 8,
@@ -27,15 +23,19 @@
     "maxTouchedFiles": 8,
     "maxUnresolvedQuestions": 6,
     "maxAbortContextChars": 280,
-    "maxSuggestionChars": 200,
+    "maxSuggestionChars": 500,
     "prefillOnlyWhenEditorEmpty": true,
-    "showUsageInPanel": true,
-    "showPanelStatus": true,
+    "showUsageInPanel": false,
+    "showPanelStatus": false,
     "strategy": "compact",
     "transcriptMaxContextPercent": 70,
     "transcriptMaxMessages": 120,
     "transcriptMaxChars": 120000,
-    "transcriptRolloutPercent": 100
+    "transcriptRolloutPercent": 100,
+    "ghostAcceptKeys": [
+      "right",
+      "tab"
+    ]
   },
   "steering": {
     "historyWindow": 20,
@@ -43,7 +43,7 @@
     "maxChangedExamples": 3
   },
   "logging": {
-    "level": "info"
+    "level": "warn"
   },
   "inference": {
     "seederModel": "session-default",
