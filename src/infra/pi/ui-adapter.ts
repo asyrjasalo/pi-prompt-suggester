@@ -143,36 +143,22 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 				if (suggestionText) {
 					const isWorking = suggestionText.isWorking;
 					const animate = isWorking && runtime.animateWidgetWorkingIndicator;
-					const sourceLines = suggestionText.text.split("\n");
-					let inlinedHintOnFirstVisualLine = false;
-					for (let index = 0; index < sourceLines.length; index += 1) {
-					const prefix = index === 0 ? (isWorking ? (animate ? `${SPINNER_FRAMES[spinnerFrameIndex]} ` : "○ ") : "✦ ") : "  ";
+					// Flatten to single line: replace newlines with space, collapse whitespace
+					const flattened = suggestionText.text.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+					const prefix = isWorking ? (animate ? `${SPINNER_FRAMES[spinnerFrameIndex]} ` : "○ ") : "✦ ";
 					const lineContent = isWorking
 						? (animate
-							? `${theme.fg("accent", SPINNER_FRAMES[spinnerFrameIndex])} ${theme.fg("dim", sourceLines[index] ?? "")}`
-							: theme.fg("dim", `${prefix}${sourceLines[index] ?? ""}`))
-						: theme.fg(suggestionText.dimmed ? "dim" : "accent", `${prefix}${sourceLines[index] ?? ""}`);
-						const wrapWidth =
-							index === 0 && hintWidth > 0 && !inlinedHintOnFirstVisualLine
-								? Math.max(10, width - hintWidth)
-								: Math.max(10, width);
-						const wrapped = wrapTextWithAnsi(lineContent, wrapWidth);
-						const segments = wrapped.length > 0 ? wrapped : [lineContent.trimEnd()];
-						let segIdx = 0;
-						for (const wrappedLine of segments) {
-							let truncated: string;
-							if (index === 0 && segIdx === 0 && hintAnsi && !inlinedHintOnFirstVisualLine) {
-								truncated = truncateToWidth(wrappedLine + hintAnsi, width, "", true);
-								inlinedHintOnFirstVisualLine = true;
-							}
-							else {
-								truncated = truncateToWidth(wrappedLine, Math.max(10, width), "", true);
-							}
-							const pad = " ".repeat(Math.max(0, width - visibleWidth(truncated)));
-							lines.push(truncated + pad);
-							segIdx += 1;
-						}
-					}
+							? `${theme.fg("accent", SPINNER_FRAMES[spinnerFrameIndex])} ${theme.fg("dim", flattened)}`
+							: theme.fg("dim", `${prefix}${flattened}`))
+						: theme.fg(suggestionText.dimmed ? "dim" : "accent", `${prefix}${flattened}`);
+					const wrapWidth = hintWidth > 0 ? Math.max(10, width - hintWidth) : Math.max(10, width);
+					// Truncate suggestion to single line, add "..." when content overflows
+					const truncatedSuggestion = truncateToWidth(lineContent, wrapWidth, "...", false);
+					const truncated = hintAnsi
+						? truncateToWidth(truncatedSuggestion + hintAnsi, width, "", true)
+						: truncateToWidth(truncatedSuggestion, Math.max(10, width), "", true);
+					const pad = " ".repeat(Math.max(0, width - visibleWidth(truncated)));
+					lines.push(truncated + pad);
 				}
 				const parts: string[] = [];
 				if (suggestionStatus) parts.push(theme.fg("accent", suggestionStatus));
