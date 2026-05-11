@@ -1,4 +1,44 @@
-import type { ExtensionAPI, ExtensionContext, InputEvent } from "@mariozechner/pi-coding-agent";
+import { type ExtensionAPI, type ExtensionContext, type InputEvent, VERSION, SessionManager } from "@mariozechner/pi-coding-agent";
+import path from "node:path";
+
+async function buildIdleHint(pi: ExtensionAPI, ctx: ExtensionContext): Promise<string | undefined> {
+	const parts: string[] = [];
+	parts.push(`pi v${VERSION}`);
+
+	const commands = pi.getCommands();
+	const byScope = (source: string) => {
+		const paths = commands.filter((c) => c.source === source).map((c) => c.sourceInfo.path);
+		const user = new Set(paths.filter((_, i) => commands.filter((c) => c.source === source)[i].sourceInfo.scope === "user")).size;
+		const project = new Set(paths.filter((_, i) => commands.filter((c) => c.source === source)[i].sourceInfo.scope === "project")).size;
+		return { user, project };
+	};
+
+	const fmtScope = (user: number, project: number, label: string) => {
+		const parts_s: string[] = [];
+		if (user > 0) parts_s.push(`${user}u`);
+		if (project > 0) parts_s.push(`${project}p`);
+		return parts_s.length > 0 ? `${parts_s.join("/")} ${label}` : "";
+	};
+
+	const prompts = byScope("prompt");
+	const ps = fmtScope(prompts.user, prompts.project, "prompts");
+	if (ps) parts.push(ps);
+
+	const skills = byScope("skill");
+	const ss = fmtScope(skills.user, skills.project, "skills");
+	if (ss) parts.push(ss);
+
+	const ext = byScope("extension");
+	const es = fmtScope(ext.user, ext.project, "extensions");
+	if (es) parts.push(es);
+
+	try {
+		const sessions = await SessionManager.list(ctx.cwd);
+		if (sessions.length > 0) parts.push(`${sessions.length} sessions for ${path.basename(ctx.cwd)}`);
+	} catch { /* ignore */ }
+
+	return parts.length > 0 ? parts.join(" · ") : undefined;
+}
 import { createAppComposition, type AppComposition } from "./composition/root.js";
 import { buildLatestHistoricalTurnContext } from "./app/services/conversation-signals.js";
 import { PiExtensionAdapter } from "./infra/pi/extension-adapter.js";
@@ -116,6 +156,12 @@ export default function suggester(pi: ExtensionAPI) {
 	const adapter = new PiExtensionAdapter(pi, {
 		onSessionStart: async (ctx) => {
 			const composition = await setRuntimeContext(ctx);
+
+			// Build idle hint for empty widget state
+			buildIdleHint(pi, ctx).then((hint) => {
+				composition.runtimeRef.setIdleHint(hint);
+				if (ctx.hasUI) refreshSuggesterUi(getUiContext(composition));
+			}).catch(() => { /* non-critical */ });
 			if (ctx.hasUI) {
 				attachWidgetAcceptTerminalInput(ctx);
 				if (composition.config.suggestion.hideChatWorkingIndicator) {
