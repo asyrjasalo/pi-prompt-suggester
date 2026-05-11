@@ -8,6 +8,32 @@ import { formatGhostAcceptKeys } from "./ghost-accept-keys.js";
 import { getSuggestionStatusText, usesGhostEditor, usesWidgetSuggestion } from "./suggestion-display-mode.js";
 import type { UiContextLike } from "./ui-context.js";
 
+/** Pi's default braille spinner frames. */
+const SPINNER_FRAMES = ["\u280B", "\u2819", "\u2839", "\u2838", "\u283C", "\u2834", "\u2826", "\u2827", "\u2807", "\u280F"] as const;
+const SPINNER_INTERVAL_MS = 80;
+
+let spinnerFrameIndex = 0;
+let spinnerTimer: ReturnType<typeof setInterval> | undefined;
+let activeTui: { requestRender: () => void } | undefined;
+
+function startSpinnerAnimation(): void {
+	if (spinnerTimer !== undefined) return;
+	if (!activeTui) return;
+	const tui = activeTui;
+	spinnerTimer = setInterval(() => {
+		spinnerFrameIndex = (spinnerFrameIndex + 1) % SPINNER_FRAMES.length;
+		tui.requestRender();
+	}, SPINNER_INTERVAL_MS);
+}
+
+function stopSpinnerAnimation(): void {
+	if (spinnerTimer !== undefined) {
+		clearInterval(spinnerTimer);
+		spinnerTimer = undefined;
+		spinnerFrameIndex = 0;
+	}
+}
+
 /** Widget-mode footer hint; matches `ghostAcceptKeys` (same labels as ghost editor). */
 export function widgetAcceptHintText(ghostAcceptKeys: readonly GhostAcceptKey[] | undefined): string {
 	return `${formatGhostAcceptKeys(ghostAcceptKeys)} accepts`;
@@ -87,6 +113,14 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 	const usageStatus = runtime.showUsageInPanel ? runtime.getPanelUsageStatus() : undefined;
 	const logStatus = runtime.getPanelLogStatus();
 
+	// Manage spinner animation lifecycle.
+	const shouldAnimate = !!suggestionText?.isWorking && runtime.animateWidgetWorkingIndicator;
+	if (shouldAnimate) {
+		startSpinnerAnimation();
+	} else {
+		stopSpinnerAnimation();
+	}
+
 	// In widget mode, always keep the widget alive so widgets below don't shift.
 	// render() falls back to an empty line when suggestion is hidden (user typed).
 	// In ghost mode, remove the widget entirely (ghost editor owns the UI).
@@ -97,7 +131,9 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 
 	ctx.ui.setWidget(
 		"suggester-panel",
-		(_tui, theme) => ({
+		(_tui, theme) => {
+			activeTui = _tui;
+			return {
 			invalidate() {},
 			render(width: number): string[] {
 				const lines: string[] = [];
@@ -106,20 +142,22 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 				const hintWidth = hintAnsi ? visibleWidth(hintAnsi) : 0;
 				if (suggestionText) {
 					const isWorking = suggestionText.isWorking;
+					const animate = isWorking && runtime.animateWidgetWorkingIndicator;
 					const sourceLines = suggestionText.text.split("\n");
 					let inlinedHintOnFirstVisualLine = false;
 					for (let index = 0; index < sourceLines.length; index += 1) {
-					const prefix = index === 0 ? (isWorking ? "○ " : "✦ ") : "  ";
-					const color: "dim" | "accent" = isWorking ? "dim" : "accent";
+					const prefix = index === 0 ? (isWorking ? (animate ? `${SPINNER_FRAMES[spinnerFrameIndex]} ` : "○ ") : "✦ ") : "  ";
+					const lineContent = isWorking
+						? (animate
+							? `${theme.fg("accent", SPINNER_FRAMES[spinnerFrameIndex])} ${theme.fg("dim", sourceLines[index] ?? "")}`
+							: theme.fg("dim", `${prefix}${sourceLines[index] ?? ""}`))
+						: theme.fg("accent", `${prefix}${sourceLines[index] ?? ""}`);
 						const wrapWidth =
 							index === 0 && hintWidth > 0 && !inlinedHintOnFirstVisualLine
 								? Math.max(10, width - hintWidth)
 								: Math.max(10, width);
-						const wrapped = wrapTextWithAnsi(
-							theme.fg(color, `${prefix}${sourceLines[index] ?? ""}`),
-							wrapWidth,
-						);
-						const segments = wrapped.length > 0 ? wrapped : [theme.fg(color, prefix.trimEnd())];
+						const wrapped = wrapTextWithAnsi(lineContent, wrapWidth);
+						const segments = wrapped.length > 0 ? wrapped : [lineContent.trimEnd()];
 						let segIdx = 0;
 						for (const wrappedLine of segments) {
 							let truncated: string;
@@ -151,9 +189,10 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 					const pad = " ".repeat(Math.max(0, width - visibleWidth(truncated)));
 					lines.push(truncated + pad);
 				}
-				return lines.length > 0 ? lines : [" ".repeat(Math.max(1, width))];
+			return lines.length > 0 ? lines : [" ".repeat(Math.max(1, width))];
 			},
-		}),
+		};
+		},
 		{ placement: "belowEditor" },
 	);
 }

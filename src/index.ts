@@ -118,7 +118,7 @@ export default function suggester(pi: ExtensionAPI) {
 			const composition = await setRuntimeContext(ctx);
 			if (ctx.hasUI) {
 				attachWidgetAcceptTerminalInput(ctx);
-				if (composition.config.suggestion.hideWorkingIndicator) {
+				if (composition.config.suggestion.hideChatWorkingIndicator) {
 					ctx.ui.setWorkingVisible(false);
 				}
 			}

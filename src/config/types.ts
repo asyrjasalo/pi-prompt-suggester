@@ -34,7 +34,8 @@ export interface SuggestionConfig {
 	prefillOnlyWhenEditorEmpty: boolean;
 	showUsageInPanel: boolean;
 	showPanelStatus: boolean;
-	hideWorkingIndicator: boolean;
+	animateWidgetWorkingIndicator: boolean;
+	hideChatWorkingIndicator: boolean;
 	strategy: SuggestionStrategy;
 	transcriptMaxContextPercent: number;
 	transcriptMaxMessages: number;

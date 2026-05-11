@@ -30,6 +30,7 @@ export interface UiContextLike {
 	prefillOnlyWhenEditorEmpty: boolean;
 	showUsageInPanel: boolean;
 	showPanelStatus: boolean;
+	animateWidgetWorkingIndicator: boolean;
 }
 
 export function createUiContext(params: {
@@ -77,6 +78,9 @@ export function createUiContext(params: {
 		},
 		get showPanelStatus() {
 			return config.suggestion.showPanelStatus;
+		},
+		get animateWidgetWorkingIndicator() {
+			return config.suggestion.animateWidgetWorkingIndicator;
 		},
 	};
 }
