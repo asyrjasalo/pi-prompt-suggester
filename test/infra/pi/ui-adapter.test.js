@@ -264,7 +264,10 @@ test("refreshSuggesterUi hides widget suggestion when editor already contains te
 
 	refreshSuggesterUi(runtime);
 
-	assert.equal(lastWidget?.content, undefined);
+	assert.equal(typeof lastWidget?.content, "function");
+	const rendered = lastWidget.content(null, createTheme()).render(80);
+	assert.equal(rendered.length, 1);
+	assert.equal(rendered[0].trim(), "");
 });
 
 test("refreshSuggesterUi hides widget suggestion content after switching back to ghost mode", () => {

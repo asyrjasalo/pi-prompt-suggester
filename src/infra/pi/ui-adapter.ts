@@ -81,7 +81,11 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 		widgetMode && suggestionText ? widgetAcceptHintText(runtime.ghostAcceptKeys) : undefined;
 	const usageStatus = runtime.showUsageInPanel ? runtime.getPanelUsageStatus() : undefined;
 	const logStatus = runtime.getPanelLogStatus();
-	if (!suggestionText && !suggestionStatus && !logStatus && !usageStatus) {
+
+	// In widget mode, always keep the widget alive so widgets below don't shift.
+	// render() falls back to an empty line when suggestion is hidden (user typed).
+	// In ghost mode, remove the widget entirely (ghost editor owns the UI).
+	if (!widgetMode && !suggestionStatus && !logStatus && !usageStatus) {
 		ctx.ui.setWidget("suggester-panel", undefined);
 		return;
 	}
