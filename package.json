@@ -43,16 +43,14 @@
   "peerDependencies": {
     "@mariozechner/pi-agent-core": "*",
     "@mariozechner/pi-ai": "*",
-    "@mariozechner/pi-coding-agent": "*",
     "@mariozechner/pi-tui": "*"
   },
   "dependencies": {
-    "@mariozechner/pi-agent-core": "^0.70.2",
-    "@mariozechner/pi-ai": "^0.70.2",
-    "@mariozechner/pi-coding-agent": "^0.70.2",
-    "@mariozechner/pi-tui": "^0.70.2",
-    "typescript": "^5.7.3",
-    "@types/node": "^24.3.0"
-  },
-  "devDependencies": {}
+    "@mariozechner/pi-agent-core": "*",
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-coding-agent": "^0.73.1",
+    "@mariozechner/pi-tui": "*",
+    "@types/node": "^24.3.0",
+    "typescript": "^5.7.3"
+  }
 }

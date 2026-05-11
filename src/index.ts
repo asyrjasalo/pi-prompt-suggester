@@ -118,6 +118,9 @@ export default function suggester(pi: ExtensionAPI) {
 			const composition = await setRuntimeContext(ctx);
 			if (ctx.hasUI) {
 				attachWidgetAcceptTerminalInput(ctx);
+				if (composition.config.suggestion.hideWorkingIndicator) {
+					ctx.ui.setWorkingVisible(false);
+				}
 			}
 			const generationId = composition.runtimeRef.bumpEpoch();
 			syncSuggestionUi(ctx, composition);
