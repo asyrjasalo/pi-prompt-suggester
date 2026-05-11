@@ -12,6 +12,7 @@ import type { StalenessChecker } from "../services/staleness-checker.js";
 import type { ReseedRunner } from "./reseed-runner.js";
 
 export interface SuggestionSink {
+	showWorking(text: string): Promise<void>;
 	showSuggestion(text: string, options?: { restore?: boolean; generationId?: number }): Promise<void>;
 	clearSuggestion(options?: { generationId?: number }): Promise<void>;
 	setUsage(usage: { suggester: SuggestionUsageStats; seeder: SuggestionUsageStats }): Promise<void>;
@@ -38,6 +39,8 @@ export class TurnEndOrchestrator {
 	public constructor(private readonly deps: TurnEndOrchestratorDeps) {}
 
 	public async handle(turn: TurnContext, generationId?: number, signal?: AbortSignal): Promise<void> {
+		await this.deps.suggestionSink.showWorking("Generating suggestion...");
+
 		this.deps.logger.info("suggestion.turn.received", {
 			turnId: turn.turnId,
 			status: turn.status,

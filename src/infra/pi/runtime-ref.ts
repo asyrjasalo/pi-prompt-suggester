@@ -19,6 +19,7 @@ export class RuntimeRef {
 	private panelSuggestionStatus: string | undefined;
 	private panelUsageStatus: string | undefined;
 	private panelLogStatus: { level: "debug" | "info" | "warn" | "error"; text: string } | undefined;
+	private workingText: string | undefined;
 	private editorHistoryState: EditorHistoryState = { entries: [], index: -1 };
 
 	public setContext(ctx: ExtensionContext): void {
@@ -103,6 +104,14 @@ export class RuntimeRef {
 
 	public getPanelLogStatus(): { level: "debug" | "info" | "warn" | "error"; text: string } | undefined {
 		return this.panelLogStatus;
+	}
+
+	public setWorkingText(text: string | undefined): void {
+		this.workingText = text?.trim() || undefined;
+	}
+
+	public getWorkingText(): string | undefined {
+		return this.workingText;
 	}
 
 	public setEditorHistoryState(state: EditorHistoryState): void {

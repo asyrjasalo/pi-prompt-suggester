@@ -78,6 +78,7 @@ test("TurnEndOrchestrator records usage and persists transcript-steering suggest
 		},
 		suggestionSink: {
 			async showSuggestion(text) { shown.push(text); },
+			async showWorking() {},
 			async clearSuggestion() {},
 			async setUsage() {},
 		},

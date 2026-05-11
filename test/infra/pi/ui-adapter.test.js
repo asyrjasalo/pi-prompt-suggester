@@ -52,7 +52,15 @@ test("PiSuggestionSink keeps ghost suggestions even before idle flips", async ()
 		getWidgetRestoreSuggestion() {
 			return undefined;
 		},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		setWidgetRestoreSuggestion() {},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		getPanelSuggestionStatus() {
 			return this.panelSuggestionStatus;
 		},
@@ -123,7 +131,15 @@ test("PiSuggestionSink retains suggestions even when the editor text is temporar
 		getWidgetRestoreSuggestion() {
 			return undefined;
 		},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		setWidgetRestoreSuggestion() {},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		getPanelSuggestionStatus() {
 			return this.panelSuggestionStatus;
 		},
@@ -188,7 +204,15 @@ test("refreshSuggesterUi still renders the panel when a suggestion exists", () =
 		getWidgetRestoreSuggestion() {
 			return undefined;
 		},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		setWidgetRestoreSuggestion() {},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		getPanelSuggestionStatus() {
 			return "prompt suggestion";
 		},
@@ -246,7 +270,15 @@ test("refreshSuggesterUi hides widget suggestion when editor already contains te
 		getWidgetRestoreSuggestion() {
 			return undefined;
 		},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		setWidgetRestoreSuggestion() {},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		getPanelSuggestionStatus() {
 			return "panel suggestion status";
 		},
@@ -296,7 +328,15 @@ test("refreshSuggesterUi hides widget suggestion content after switching back to
 		getWidgetRestoreSuggestion() {
 			return undefined;
 		},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		setWidgetRestoreSuggestion() {},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		getPanelSuggestionStatus() {
 			return "prompt suggestion";
 		},
@@ -348,6 +388,10 @@ test("refreshSuggesterUi shows widget restore text when editor empty and primary
 			return "restored line";
 		},
 		setWidgetRestoreSuggestion() {},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		getPanelSuggestionStatus() {
 			return undefined;
 		},
@@ -394,6 +438,10 @@ test("refreshSuggesterUi hides widget restore text when editor is not empty", ()
 			return "restored line";
 		},
 		setWidgetRestoreSuggestion() {},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		getPanelSuggestionStatus() {
 			return undefined;
 		},
@@ -446,6 +494,10 @@ test("acceptWidgetSuggestion materializes the suggestion into the default editor
 		setWidgetRestoreSuggestion(text) {
 			this.widgetRestore = text;
 		},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		getPanelSuggestionStatus() {
 			return this.panelSuggestionStatus;
 		},
@@ -507,6 +559,10 @@ test("acceptWidgetSuggestion refuses to overwrite diverged editor text", () => {
 		setWidgetRestoreSuggestion(text) {
 			this.widgetRestore = text;
 		},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		getPanelSuggestionStatus() {
 			return undefined;
 		},
@@ -560,7 +616,15 @@ test("PiSuggestionSink writes usage into the panel instead of the footer status 
 		getWidgetRestoreSuggestion() {
 			return undefined;
 		},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		setWidgetRestoreSuggestion() {},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		getPanelSuggestionStatus() {
 			return undefined;
 		},
@@ -670,6 +734,10 @@ test("PiSuggestionSink shows widget suggestions when widget mode is enabled", as
 		setWidgetRestoreSuggestion(text) {
 			this.widgetRestore = text;
 		},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		getPanelSuggestionStatus() {
 			return this.panelSuggestionStatus;
 		},
@@ -689,6 +757,10 @@ test("PiSuggestionSink shows widget suggestions when widget mode is enabled", as
 		getSuggesterModelDisplay() {
 			return undefined;
 		},
+		getWorkingText() {
+			return undefined;
+		},
+		setWorkingText() {},
 		suggestionDisplayMode: "widget",
 		prefillOnlyWhenEditorEmpty: true,
 		showUsageInPanel: true,

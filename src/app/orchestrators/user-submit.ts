@@ -26,6 +26,7 @@ export class UserSubmitOrchestrator {
 		if (ctx.source === "extension") return;
 		const state = await this.deps.stateStore.load();
 		await this.deps.suggestionSink.clearSuggestion();
+		await this.deps.suggestionSink.showWorking("Responding...");
 		if (!state.lastSuggestion) return;
 		if (!ctx.userPrompt.trim()) return;
 

@@ -22,11 +22,16 @@ function editorHasTypedContent(ctx: ExtensionContext): boolean {
 }
 
 /** Widget panel text: active suggestion, or restore buffer when editor cleared after accept. Hidden while user has typed anything (trimmed). */
-function effectiveWidgetSuggestionText(runtime: UiContextLike, ctx: ExtensionContext): string | undefined {
+function effectiveWidgetSuggestionText(runtime: UiContextLike, ctx: ExtensionContext): { text: string; isWorking: boolean } | undefined {
+	const working = runtime.getWorkingText();
+	if (working) return { text: working, isWorking: true };
+
 	if (editorHasTypedContent(ctx)) return undefined;
 	const primary = runtime.getSuggestion();
-	if (primary) return primary;
-	return runtime.getWidgetRestoreSuggestion();
+	if (primary) return { text: primary, isWorking: false };
+	const restored = runtime.getWidgetRestoreSuggestion();
+	if (restored) return { text: restored, isWorking: false };
+	return undefined;
 }
 
 function getSafeUiContext(runtime: UiContextLike): ExtensionContext | undefined {
@@ -78,7 +83,7 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 			? runtime.getPanelSuggestionStatus()
 			: undefined;
 	const suggestionHint =
-		widgetMode && suggestionText ? widgetAcceptHintText(runtime.ghostAcceptKeys) : undefined;
+		widgetMode && suggestionText && !suggestionText.isWorking ? widgetAcceptHintText(runtime.ghostAcceptKeys) : undefined;
 	const usageStatus = runtime.showUsageInPanel ? runtime.getPanelUsageStatus() : undefined;
 	const logStatus = runtime.getPanelLogStatus();
 
@@ -97,22 +102,24 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 			render(width: number): string[] {
 				const lines: string[] = [];
 				const hintAnsi =
-					suggestionHint ? theme.fg("muted", ` · ${suggestionHint}`) : "";
+					suggestionHint ? theme.fg("dim", ` · ${suggestionHint}`) : "";
 				const hintWidth = hintAnsi ? visibleWidth(hintAnsi) : 0;
 				if (suggestionText) {
-					const sourceLines = suggestionText.split("\n");
+					const isWorking = suggestionText.isWorking;
+					const sourceLines = suggestionText.text.split("\n");
 					let inlinedHintOnFirstVisualLine = false;
 					for (let index = 0; index < sourceLines.length; index += 1) {
-						const prefix = index === 0 ? "✦ " : "  ";
+					const prefix = index === 0 ? (isWorking ? "○ " : "✦ ") : "  ";
+					const color: "dim" | "accent" = isWorking ? "dim" : "accent";
 						const wrapWidth =
 							index === 0 && hintWidth > 0 && !inlinedHintOnFirstVisualLine
 								? Math.max(10, width - hintWidth)
 								: Math.max(10, width);
 						const wrapped = wrapTextWithAnsi(
-							theme.fg("accent", `${prefix}${sourceLines[index] ?? ""}`),
+							theme.fg(color, `${prefix}${sourceLines[index] ?? ""}`),
 							wrapWidth,
 						);
-						const segments = wrapped.length > 0 ? wrapped : [theme.fg("accent", prefix.trimEnd())];
+						const segments = wrapped.length > 0 ? wrapped : [theme.fg(color, prefix.trimEnd())];
 						let segIdx = 0;
 						for (const wrappedLine of segments) {
 							let truncated: string;
@@ -131,7 +138,7 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 				}
 				const parts: string[] = [];
 				if (suggestionStatus) parts.push(theme.fg("accent", suggestionStatus));
-				if (suggestionHint && !suggestionText) parts.push(theme.fg("muted", suggestionHint));
+				if (suggestionHint && !suggestionText) parts.push(theme.fg("dim", suggestionHint));
 				if (logStatus) parts.push(formatPanelLog(ctx, logStatus));
 				const line = parts.join(" · ");
 				if (line) {
@@ -169,10 +176,17 @@ export function acceptWidgetSuggestion(runtime: UiContextLike): "accepted" | "mi
 export class PiSuggestionSink implements SuggestionSink {
 	public constructor(private readonly runtime: UiContextLike) {}
 
+	public async showWorking(text: string): Promise<void> {
+		this.runtime.setWorkingText(text);
+		refreshSuggesterUi(this.runtime);
+	}
+
 	public async showSuggestion(text: string, options?: { restore?: boolean; generationId?: number }): Promise<void> {
 		if (options?.generationId !== undefined && options.generationId !== this.runtime.getEpoch()) return;
 		const ctx = getSafeUiContext(this.runtime);
 		if (!ctx) return;
+
+		this.runtime.setWorkingText(undefined);
 
 		const editorText = ctx.ui.getEditorText();
 		const trimmedEditorText = editorText.trim();
@@ -197,6 +211,7 @@ export class PiSuggestionSink implements SuggestionSink {
 
 	public async clearSuggestion(options?: { generationId?: number }): Promise<void> {
 		if (options?.generationId !== undefined && options.generationId !== this.runtime.getEpoch()) return;
+		this.runtime.setWorkingText(undefined);
 		this.runtime.setSuggestion(undefined);
 		this.runtime.setWidgetRestoreSuggestion(undefined);
 		this.runtime.setPanelSuggestionStatus(undefined);

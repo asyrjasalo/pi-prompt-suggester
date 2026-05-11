@@ -23,6 +23,8 @@ export interface UiContextLike {
 	getPanelLogStatus(): WidgetLogStatus | undefined;
 	setPanelLogStatus(status: WidgetLogStatus | undefined): void;
 	getSuggesterModelDisplay(): string | undefined;
+	getWorkingText(): string | undefined;
+	setWorkingText(text: string | undefined): void;
 	suggestionDisplayMode: PromptSuggesterConfig["suggestion"]["displayMode"];
 	ghostAcceptKeys: PromptSuggesterConfig["suggestion"]["ghostAcceptKeys"];
 	prefillOnlyWhenEditorEmpty: boolean;
@@ -59,6 +61,8 @@ export function createUiContext(params: {
 				getSessionThinkingLevel,
 			});
 		},
+		getWorkingText: () => runtimeRef.getWorkingText(),
+		setWorkingText: (text) => runtimeRef.setWorkingText(text),
 		get suggestionDisplayMode() {
 			return config.suggestion.displayMode;
 		},
