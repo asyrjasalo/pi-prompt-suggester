@@ -239,7 +239,7 @@ test("refreshSuggesterUi still renders the panel when a suggestion exists", () =
 	assert.equal(rendered.some((line) => line.includes("suggester usage: ↑10 ↓5 R2 $0.001 (1 sugg, 0 seed)")), true);
 });
 
-test("refreshSuggesterUi hides widget suggestion when editor already contains text", () => {
+test("refreshSuggesterUi dims widget suggestion when editor already contains text", () => {
 	let lastWidget;
 	const ctx = {
 		hasUI: true,
@@ -299,7 +299,9 @@ test("refreshSuggesterUi hides widget suggestion when editor already contains te
 	assert.equal(typeof lastWidget?.content, "function");
 	const rendered = lastWidget.content(null, createTheme()).render(80);
 	assert.equal(rendered.length, 1);
-	assert.equal(rendered[0].trim(), "");
+	assert.match(rendered[0], /suggested follow-up prompt/);
+	// Dimmed: no accept hint should appear
+	assert.equal(rendered.some((l) => /Accept with/.test(l)), false);
 });
 
 test("refreshSuggesterUi hides widget suggestion content after switching back to ghost mode", () => {
@@ -412,7 +414,7 @@ test("refreshSuggesterUi shows widget restore text when editor empty and primary
 	assert.equal(rendered.some((line) => line.includes("restored line")), true);
 });
 
-test("refreshSuggesterUi hides widget restore text when editor is not empty", () => {
+test("refreshSuggesterUi dims widget restore text when editor is not empty", () => {
 	let lastWidget;
 	const ctx = {
 		hasUI: true,
@@ -459,7 +461,9 @@ test("refreshSuggesterUi hides widget restore text when editor is not empty", ()
 
 	refreshSuggesterUi(runtime);
 	const rendered = lastWidget.content(null, createTheme()).render(80);
-	assert.equal(rendered.some((line) => line.includes("restored line")), false);
+	assert.equal(rendered.some((line) => line.includes("restored line")), true);
+	// Dimmed: no accept hint should appear
+	assert.equal(rendered.some((l) => /Accept with/.test(l)), false);
 });
 
 test("acceptWidgetSuggestion materializes the suggestion into the default editor", () => {

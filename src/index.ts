@@ -93,7 +93,7 @@ export default function suggester(pi: ExtensionAPI) {
 				return undefined;
 			}
 
-			refreshSuggesterUi(getUiContext(composition));
+			setImmediate(() => refreshSuggesterUi(getUiContext(composition)));
 			return undefined;
 		});
 	}

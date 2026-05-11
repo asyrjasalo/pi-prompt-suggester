@@ -47,16 +47,16 @@ function editorHasTypedContent(ctx: ExtensionContext): boolean {
 	return ctx.ui.getEditorText().trim().length > 0;
 }
 
-/** Widget panel text: active suggestion, or restore buffer when editor cleared after accept. Hidden while user has typed anything (trimmed). */
-function effectiveWidgetSuggestionText(runtime: UiContextLike, ctx: ExtensionContext): { text: string; isWorking: boolean } | undefined {
+/** Widget panel text: active suggestion, or restore buffer when editor cleared after accept. Dimmed when user has typed content. */
+function effectiveWidgetSuggestionText(runtime: UiContextLike, ctx: ExtensionContext): { text: string; isWorking: boolean; dimmed: boolean } | undefined {
 	const working = runtime.getWorkingText();
-	if (working) return { text: working, isWorking: true };
+	if (working) return { text: working, isWorking: true, dimmed: false };
 
-	if (editorHasTypedContent(ctx)) return undefined;
+	const hasTyped = editorHasTypedContent(ctx);
 	const primary = runtime.getSuggestion();
-	if (primary) return { text: primary, isWorking: false };
+	if (primary) return { text: primary, isWorking: false, dimmed: hasTyped };
 	const restored = runtime.getWidgetRestoreSuggestion();
-	if (restored) return { text: restored, isWorking: false };
+	if (restored) return { text: restored, isWorking: false, dimmed: hasTyped };
 	return undefined;
 }
 
@@ -109,7 +109,7 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 			? runtime.getPanelSuggestionStatus()
 			: undefined;
 	const suggestionHint =
-		widgetMode && suggestionText && !suggestionText.isWorking ? widgetAcceptHintText(runtime.ghostAcceptKeys) : undefined;
+		widgetMode && suggestionText && !suggestionText.isWorking && !suggestionText.dimmed ? widgetAcceptHintText(runtime.ghostAcceptKeys) : undefined;
 	const usageStatus = runtime.showUsageInPanel ? runtime.getPanelUsageStatus() : undefined;
 	const logStatus = runtime.getPanelLogStatus();
 
@@ -151,7 +151,7 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 						? (animate
 							? `${theme.fg("accent", SPINNER_FRAMES[spinnerFrameIndex])} ${theme.fg("dim", sourceLines[index] ?? "")}`
 							: theme.fg("dim", `${prefix}${sourceLines[index] ?? ""}`))
-						: theme.fg("accent", `${prefix}${sourceLines[index] ?? ""}`);
+						: theme.fg(suggestionText.dimmed ? "dim" : "accent", `${prefix}${sourceLines[index] ?? ""}`);
 						const wrapWidth =
 							index === 0 && hintWidth > 0 && !inlinedHintOnFirstVisualLine
 								? Math.max(10, width - hintWidth)
