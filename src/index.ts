@@ -1,5 +1,7 @@
 import { type ExtensionAPI, type ExtensionContext, type InputEvent, VERSION, SessionManager } from "@mariozechner/pi-coding-agent";
 import path from "node:path";
+import fs from "node:fs";
+import os from "node:os";
 
 async function buildIdleHint(pi: ExtensionAPI, ctx: ExtensionContext): Promise<string | undefined> {
 	const parts: string[] = [];
@@ -17,7 +19,7 @@ async function buildIdleHint(pi: ExtensionAPI, ctx: ExtensionContext): Promise<s
 		const parts_s: string[] = [];
 		if (user > 0) parts_s.push(`${user}u`);
 		if (project > 0) parts_s.push(`${project}p`);
-		return parts_s.length > 0 ? `${parts_s.join("/")} ${label}` : "";
+		return parts_s.length > 0 ? `${parts_s.join("+")} ${label}` : "";
 	};
 
 	const prompts = byScope("prompt");
@@ -31,6 +33,24 @@ async function buildIdleHint(pi: ExtensionAPI, ctx: ExtensionContext): Promise<s
 	const ext = byScope("extension");
 	const es = fmtScope(ext.user, ext.project, "extensions");
 	if (es) parts.push(es);
+
+	// Check AGENTS.md / CLAUDE.md presence
+	const agentsParts: string[] = [];
+	try { fs.statSync(path.join(os.homedir(), ".pi", "agent", "AGENTS.md")); agentsParts.push("u"); } catch { /* no user AGENTS.md */ }
+	let foundProject = false;
+	let dir: string = ctx.cwd;
+	while (dir && dir !== path.dirname(dir)) {
+		if (!foundProject) { try { fs.statSync(path.join(dir, "AGENTS.md")); agentsParts.push("p"); foundProject = true; } catch { /* */ } }
+		dir = path.dirname(dir);
+	}
+	if (agentsParts.length > 0) parts.push(`${agentsParts.join("+")} AGENTS.md`);
+	const claudeParts: string[] = [];
+	let dir2: string = ctx.cwd;
+	while (dir2 && dir2 !== path.dirname(dir2)) {
+		try { fs.statSync(path.join(dir2, "CLAUDE.md")); claudeParts.push("p"); break; } catch { /* */ }
+		dir2 = path.dirname(dir2);
+	}
+	if (claudeParts.length > 0) parts.push(`${claudeParts.join("+")} CLAUDE.md`);
 
 	try {
 		const sessions = await SessionManager.list(ctx.cwd);
