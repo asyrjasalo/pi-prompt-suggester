@@ -80,8 +80,12 @@ export class SessionStateStore implements StateStore {
 	}
 
 	private getStorageContext(): SessionStorageContext | undefined {
-		const sessionManager = this.getSessionManager();
-		return sessionManager ? createSessionStorageContext(this.cwd, sessionManager) : undefined;
+		try {
+			const sessionManager = this.getSessionManager();
+			return sessionManager ? createSessionStorageContext(this.cwd, sessionManager) : undefined;
+		} catch {
+			return undefined;
+		}
 	}
 
 	private async loadInteractionState(context: SessionStorageContext): Promise<PersistedInteractionState> {
