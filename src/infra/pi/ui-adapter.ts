@@ -176,14 +176,20 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 					lines.push(truncated + pad);
 				}
 			if (lines.length === 0) {
-				const idleText = runtime.getIdleHint();
-				if (idleText) {
-					const dimmed = theme.fg("dim", idleText);
-					const truncated = truncateToWidth(dimmed, Math.max(10, width), "", true);
-					const pad = " ".repeat(Math.max(0, width - visibleWidth(truncated)));
-					lines.push(truncated + pad);
+				if (!runtime.hasUserSubmitted()) {
+					const idleText = runtime.getIdleHint();
+					if (idleText) {
+						const dimmed = theme.fg("dim", idleText);
+						const truncated = truncateToWidth(dimmed, Math.max(10, width), "", true);
+						const pad = " ".repeat(Math.max(0, width - visibleWidth(truncated)));
+						lines.push(truncated + pad);
+					} else {
+						lines.push(" ".repeat(Math.max(1, width)));
+					}
 				} else {
-					lines.push(" ".repeat(Math.max(1, width)));
+					// After first user message, collapse widget when no content
+					// setWidget(undefined) is done by returning empty from the outer scope
+					return [];
 				}
 			}
 			return lines;

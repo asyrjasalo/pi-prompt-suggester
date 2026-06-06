@@ -231,6 +231,7 @@ export default function suggester(pi: ExtensionAPI) {
 		},
 		onUserSubmit: async (event: InputEvent, ctx) => {
 			const composition = await setRuntimeContext(ctx);
+			composition.runtimeRef.markUserSubmitted();
 			syncSuggestionUi(ctx, composition);
 			composition.runtimeRef.bumpEpoch();
 			await composition.orchestrators.userSubmit.handle({

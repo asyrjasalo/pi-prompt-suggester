@@ -26,6 +26,7 @@ export interface UiContextLike {
 	getWorkingText(): string | undefined;
 	setWorkingText(text: string | undefined): void;
 	getIdleHint(): string | undefined;
+	hasUserSubmitted(): boolean;
 	suggestionDisplayMode: PromptSuggesterConfig["suggestion"]["displayMode"];
 	ghostAcceptKeys: PromptSuggesterConfig["suggestion"]["ghostAcceptKeys"];
 	prefillOnlyWhenEditorEmpty: boolean;
@@ -66,6 +67,7 @@ export function createUiContext(params: {
 		getWorkingText: () => runtimeRef.getWorkingText(),
 		setWorkingText: (text) => runtimeRef.setWorkingText(text),
 		getIdleHint: () => runtimeRef.getIdleHint(),
+		hasUserSubmitted: () => runtimeRef.hasUserSubmitted(),
 		get suggestionDisplayMode() {
 			return config.suggestion.displayMode;
 		},

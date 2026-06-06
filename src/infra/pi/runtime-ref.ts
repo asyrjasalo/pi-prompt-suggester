@@ -21,6 +21,7 @@ export class RuntimeRef {
 	private panelLogStatus: { level: "debug" | "info" | "warn" | "error"; text: string } | undefined;
 	private workingText: string | undefined;
 	private idleHint: string | undefined;
+	private _hasUserSubmitted = false;
 	private editorHistoryState: EditorHistoryState = { entries: [], index: -1 };
 
 	public setContext(ctx: ExtensionContext): void {
@@ -121,6 +122,14 @@ export class RuntimeRef {
 
 	public getIdleHint(): string | undefined {
 		return this.idleHint;
+	}
+
+	public markUserSubmitted(): void {
+		this._hasUserSubmitted = true;
+	}
+
+	public hasUserSubmitted(): boolean {
+		return this._hasUserSubmitted;
 	}
 
 	public setEditorHistoryState(state: EditorHistoryState): void {
