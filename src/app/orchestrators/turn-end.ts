@@ -186,9 +186,12 @@ export class TurnEndOrchestrator {
 
 		await this.deps.suggestionSink.showSuggestion(suggestion.text, { generationId });
 		await this.deps.suggestionSink.setUsage({ suggester: nextUsage, seeder: state.seederUsage });
+		// Don't record fast-path "continue" as lastSuggestion — it's not a real
+		// suggestion and pollutes steering history (causes repeated-rejected loops).
+		const isFastPathContinue = metadata.fallbackReason === "fast_path_continue";
 		await this.deps.stateStore.save({
 			...state,
-			lastSuggestion: {
+			lastSuggestion: isFastPathContinue ? undefined : {
 				text: suggestion.text,
 				shownAt: turn.occurredAt,
 				turnId: turn.turnId,

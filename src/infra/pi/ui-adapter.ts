@@ -187,9 +187,7 @@ export function refreshSuggesterUi(runtime: UiContextLike): void {
 						lines.push(" ".repeat(Math.max(1, width)));
 					}
 				} else {
-					// After first user message, collapse widget when no content
-					// setWidget(undefined) is done by returning empty from the outer scope
-					return [];
+					lines.push(" ".repeat(Math.max(1, width)));
 				}
 			}
 			return lines;
