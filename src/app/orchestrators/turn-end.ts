@@ -112,6 +112,10 @@ export class TurnEndOrchestrator {
 			},
 			effectiveConfig,
 		);
+		if (signal?.aborted) {
+			this.deps.logger.debug("suggestion.aborted.post_suggest", { turnId: turn.turnId, generationId });
+			return;
+		}
 		const latencyMs = Date.now() - startedAt;
 		const metadata = {
 			...suggestion.metadata,
